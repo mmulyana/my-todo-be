@@ -1,0 +1,134 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type List {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  projectId: String
+  project: Project
+  todos: [Todo!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Project {
+  id: ID!
+  name: String!
+  description: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  parentId: String
+  parent: Project
+  children: [Project!]!
+  lists: [List!]!
+  todos: [Todo!]!
+}
+
+type Todo {
+  id: ID!
+  title: String!
+  note: String!
+  completed: Boolean!
+  important: Boolean!
+  today: String
+  dueDate: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  parentId: String
+  parent: Todo
+  subtodos: [Todo!]!
+  subtodoCount: Int!
+  listId: String
+  list: List
+  projectId: String
+  project: Project
+}
+
+type Query {
+  todos(filter: TodoFilterInput): [Todo!]!
+  todo(id: ID!): Todo
+  lists: [List!]!
+  list(id: ID!): List
+  projects: [Project!]!
+  project(id: ID!): Project
+}
+
+input TodoFilterInput {
+  view: TodoView
+  listId: String
+  q: String
+  projectId: String
+}
+
+"""Built-in smart lists: TODAY, IMPORTANT, ALL"""
+enum TodoView {
+  TODAY
+  IMPORTANT
+  ALL
+}
+
+type Mutation {
+  createTodo(input: CreateTodoInput!): Todo!
+  updateTodo(input: UpdateTodoInput!): Todo!
+  removeTodo(id: ID!): Todo!
+  createList(input: CreateListInput!): List!
+  updateList(input: UpdateListInput!): List!
+  removeList(id: ID!): List!
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(input: UpdateProjectInput!): Project!
+  removeProject(id: ID!): Project!
+}
+
+input CreateTodoInput {
+  title: String!
+  note: String
+  important: Boolean
+  today: String
+  dueDate: String
+  parentId: String
+  listId: String
+  projectId: String
+}
+
+input UpdateTodoInput {
+  id: ID!
+  title: String
+  note: String
+  completed: Boolean
+  important: Boolean
+  today: String
+  dueDate: String
+  parentId: String
+  listId: String
+  projectId: String
+}
+
+input CreateListInput {
+  name: String!
+  projectId: String
+}
+
+input UpdateListInput {
+  id: ID!
+  name: String
+  projectId: String
+}
+
+input CreateProjectInput {
+  name: String!
+  description: String
+  parentId: String
+}
+
+input UpdateProjectInput {
+  id: ID!
+  name: String
+  description: String
+  parentId: String
+}
