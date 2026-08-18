@@ -4,6 +4,7 @@ import {
   Mutation,
   Args,
   ID,
+  Int,
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
@@ -13,10 +14,16 @@ import { CreateProjectInput } from './dto/create-project.input';
 import { UpdateProjectInput } from './dto/update-project.input';
 import { Todo } from '@/todos/models/todo.model';
 import { List } from '@/lists/models/list.model';
+import { Attachment } from '@/attachments/models/attachment.model';
 
 @Resolver(() => Project)
 export class ProjectsResolver {
   constructor(private readonly projectsService: ProjectsService) {}
+
+  @ResolveField(() => [Attachment])
+  attachments(@Parent() project: Project) {
+    return this.projectsService.findAttachments(project.id);
+  }
 
   @ResolveField(() => [Project])
   children(@Parent() project: Project) {
@@ -41,6 +48,11 @@ export class ProjectsResolver {
     return this.projectsService.findTodos(project.id);
   }
 
+  @ResolveField(() => Int)
+  countTodo(@Parent() project: Project) {
+    return this.projectsService.countTodos(project.id);
+  }
+
   @Mutation(() => Project)
   createProject(@Args('input') input: CreateProjectInput) {
     return this.projectsService.create(input);
@@ -54,6 +66,11 @@ export class ProjectsResolver {
   @Query(() => Project, { name: 'project', nullable: true })
   findOne(@Args('id', { type: () => ID }) id: string) {
     return this.projectsService.findOne(id);
+  }
+
+  @Query(() => Project, { name: 'projectByCode', nullable: true })
+  findByCode(@Args('code', { type: () => String }) code: string) {
+    return this.projectsService.findByCode(code);
   }
 
   @Mutation(() => Project)

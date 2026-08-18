@@ -1,6 +1,7 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 import { Todo } from '@/todos/models/todo.model';
 import { List } from '@/lists/models/list.model';
+import { Attachment } from '@/attachments/models/attachment.model';
 
 @ObjectType()
 export class Project {
@@ -9,6 +10,9 @@ export class Project {
 
   @Field()
   name: string;
+
+  @Field(() => String, { nullable: true })
+  code?: string | null;
 
   @Field(() => String, { nullable: true })
   description?: string | null;
@@ -33,4 +37,10 @@ export class Project {
 
   @Field(() => [Todo])
   todos?: Todo[];
+
+  @Field(() => [Attachment])
+  attachments?: Attachment[];
+
+  @Field(() => Int)
+  countTodo?: number;
 }

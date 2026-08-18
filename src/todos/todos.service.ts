@@ -97,6 +97,13 @@ export class TodosService {
     });
   }
 
+  findAttachments(todoId: string) {
+    return this.prisma.attachment.findMany({
+      where: { todoId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async update(id: string, dto: UpdateTodoDto) {
     this.assertDate(dto.dueDate, 'dueDate');
     this.assertDate(dto.today, 'today');

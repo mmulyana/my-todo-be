@@ -30,9 +30,19 @@ export class ProjectsController {
     return this.projectsService.findOne(id);
   }
 
+  @Get('code/:code')
+  findByCode(@Param('code') code: string) {
+    return this.projectsService.findByCode(code);
+  }
+
   @Get(':id/children')
   findChildren(@Param('id') id: string) {
     return this.projectsService.findChildren(id);
+  }
+
+  @Get(':id/todos/count')
+  countTodos(@Param('id') id: string) {
+    return this.projectsService.countTodos(id);
   }
 
   @Patch(':id')

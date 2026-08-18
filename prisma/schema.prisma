@@ -27,6 +27,8 @@ model Todo {
 
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id])
+
+  attachments Attachment[]
 }
 
 model List {
@@ -43,6 +45,7 @@ model List {
 
 model Project {
   id          String   @id @default(uuid())
+  code        String?  @unique
   name        String
   description String?
   createdAt   DateTime @default(now())
@@ -55,4 +58,28 @@ model Project {
 
   lists List[]
   todos Todo[]
+  attachments Attachment[]
+}
+
+enum AttachmentType {
+  IMAGE
+  FILE
+  LINK
+}
+
+model Attachment {
+  id        String         @id @default(uuid())
+  filename  String
+  url       String
+  mimeType  String?
+  size      Int?
+  type      AttachmentType @default(FILE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  todoId String?
+  todo   Todo?   @relation(fields: [todoId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

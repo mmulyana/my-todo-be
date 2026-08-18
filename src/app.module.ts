@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { TodosModule } from './todos/todos.module';
 import { ListsModule } from './lists/lists.module';
 import { ProjectsModule } from './projects/projects.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ProjectsModule } from './projects/projects.module';
     TodosModule,
     ListsModule,
     ProjectsModule,
+    AttachmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

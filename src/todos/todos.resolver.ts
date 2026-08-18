@@ -16,6 +16,7 @@ import { UpdateTodoInput } from './dto/update-todo.input';
 import { TodoFilterInput } from './dto/todo-filter.input';
 import { List } from '@/lists/models/list.model';
 import { Project } from '@/projects/models/project.model';
+import { Attachment } from '@/attachments/models/attachment.model';
 
 interface ResolvedTodo extends Todo {
   isSubtodo?: boolean;
@@ -24,6 +25,11 @@ interface ResolvedTodo extends Todo {
 @Resolver(() => Todo)
 export class TodosResolver {
   constructor(private readonly todosService: TodosService) {}
+
+  @ResolveField(() => [Attachment])
+  attachments(@Parent() todo: Todo) {
+    return this.todosService.findAttachments(todo.id);
+  }
 
   @ResolveField(() => [Todo])
   async subtodos(@Parent() todo: ResolvedTodo) {

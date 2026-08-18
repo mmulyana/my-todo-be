@@ -11,6 +11,7 @@ export class ProjectsService {
     return this.prisma.project.create({
       data: {
         name: dto.name,
+        code: dto.code,
         description: dto.description,
         parentId: dto.parentId ?? null,
       },
@@ -26,6 +27,12 @@ export class ProjectsService {
   findOne(id: string) {
     return this.prisma.project.findUnique({
       where: { id },
+    });
+  }
+
+  findByCode(code: string) {
+    return this.prisma.project.findUnique({
+      where: { code },
     });
   }
 
@@ -50,6 +57,19 @@ export class ProjectsService {
     });
   }
 
+  countTodos(projectId: string) {
+    return this.prisma.todo.count({
+      where: { projectId },
+    });
+  }
+
+  findAttachments(projectId: string) {
+    return this.prisma.attachment.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async update(id: string, dto: UpdateProjectDto) {
     if (dto.parentId) {
       await this.assertNotOwnDescendant(id, dto.parentId);
@@ -59,6 +79,7 @@ export class ProjectsService {
       where: { id },
       data: {
         name: dto.name,
+        code: dto.code,
         description: dto.description,
         parentId: dto.parentId,
       },
