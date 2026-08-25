@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import {
   Resolver,
   Query,
@@ -17,12 +17,15 @@ import { TodoFilterInput } from './dto/todo-filter.input';
 import { List } from '@/lists/models/list.model';
 import { Project } from '@/projects/models/project.model';
 import { Attachment } from '@/attachments/models/attachment.model';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { CurrentUser } from '@/auth/current-user.decorator';
 
 interface ResolvedTodo extends Todo {
   isSubtodo?: boolean;
 }
 
 @Resolver(() => Todo)
+@UseGuards(JwtAuthGuard)
 export class TodosResolver {
   constructor(private readonly todosService: TodosService) {}
 
@@ -74,10 +77,11 @@ export class TodosResolver {
 
   @Query(() => [Todo], { name: 'todos' })
   findAll(
+    @CurrentUser() user: { userId: string },
     @Args('filter', { type: () => TodoFilterInput, nullable: true })
     filter?: TodoFilterInput,
   ) {
-    return this.todosService.findAll(filter);
+    return this.todosService.findAll(user.userId, filter);
   }
 
   @Query(() => Todo, { name: 'todo', nullable: true })
@@ -86,8 +90,11 @@ export class TodosResolver {
   }
 
   @Mutation(() => Todo)
-  createTodo(@Args('input') input: CreateTodoInput) {
-    return this.todosService.create(input);
+  createTodo(
+    @CurrentUser() user: { userId: string },
+    @Args('input') input: CreateTodoInput,
+  ) {
+    return this.todosService.create(user.userId, input);
   }
 
   @Mutation(() => Todo)

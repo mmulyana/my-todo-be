@@ -1,0 +1,36 @@
+# dependency & hasil build (harus di-generate ulang di dalam image)
+node_modules
+dist
+build
+generated
+
+# runtime data
+uploads
+*.log
+logs
+
+# secrets / env lokal
+.env
+.env.*
+
+# git & tooling
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+.claude
+.agents
+skills-lock.json
+coverage
+.nyc_output
+test
+
+# docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+deploy
+
+# docs
+*.md

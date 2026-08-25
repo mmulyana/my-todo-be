@@ -6,5 +6,6 @@ import { TodosResolver } from './todos.resolver';
 @Module({
   controllers: [TodosController],
   providers: [TodosService, TodosResolver],
+  exports: [TodosService],
 })
 export class TodosModule {}

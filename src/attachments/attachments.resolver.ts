@@ -1,3 +1,4 @@
+import { UseGuards } from '@nestjs/common';
 import {
   Resolver,
   Query,
@@ -15,8 +16,11 @@ import { Todo } from '@/todos/models/todo.model';
 import { Project } from '@/projects/models/project.model';
 import { TodosService } from '@/todos/todos.service';
 import { ProjectsService } from '@/projects/projects.service';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { CurrentUser } from '@/auth/current-user.decorator';
 
 @Resolver(() => Attachment)
+@UseGuards(JwtAuthGuard)
 export class AttachmentsResolver {
   constructor(
     private readonly attachmentsService: AttachmentsService,
@@ -41,8 +45,11 @@ export class AttachmentsResolver {
   }
 
   @Mutation(() => Attachment)
-  createAttachment(@Args('input') input: CreateAttachmentInput) {
-    return this.attachmentsService.create(input);
+  createAttachment(
+    @CurrentUser() user: { userId: string },
+    @Args('input') input: CreateAttachmentInput,
+  ) {
+    return this.attachmentsService.create(user.userId, input);
   }
 
   @Query(() => [Attachment], { name: 'attachments' })
@@ -68,3 +75,4 @@ export class AttachmentsResolver {
     return this.attachmentsService.remove(id);
   }
 }
+

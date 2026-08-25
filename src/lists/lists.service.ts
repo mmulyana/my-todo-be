@@ -1,59 +1,76 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
+import { DbService } from '@/db/db.service';
+import { lists, projects, todos } from '@/db/schema';
+import { eq, asc } from 'drizzle-orm';
 import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
 
 @Injectable()
 export class ListsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly db: DbService) {}
 
-  create(dto: CreateListDto) {
-    return this.prisma.list.create({
-      data: {
+  async create(userId: string, dto: CreateListDto) {
+    const [list] = await this.db.db
+      .insert(lists)
+      .values({
         name: dto.name,
         projectId: dto.projectId ?? null,
-      },
-    });
+        userId,
+      })
+      .returning();
+    return list;
   }
 
-  findAll() {
-    return this.prisma.list.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
+  findAll(userId: string) {
+    return this.db.db
+      .select()
+      .from(lists)
+      .where(eq(lists.userId, userId))
+      .orderBy(asc(lists.createdAt));
   }
 
-  findOne(id: string) {
-    return this.prisma.list.findUnique({
-      where: { id },
-    });
+  async findOne(id: string) {
+    const [list] = await this.db.db
+      .select()
+      .from(lists)
+      .where(eq(lists.id, id));
+    return list ?? null;
   }
 
-  findProject(projectId: string) {
-    return this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async findProject(projectId: string) {
+    const [project] = await this.db.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
+    return project ?? null;
   }
 
   findTodos(listId: string) {
-    return this.prisma.todo.findMany({
-      where: { listId, parentId: null },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(todos)
+      .where(eq(todos.listId, listId))
+      .orderBy(asc(todos.createdAt));
   }
 
-  update(id: string, dto: UpdateListDto) {
-    return this.prisma.list.update({
-      where: { id },
-      data: {
+  async update(id: string, dto: UpdateListDto) {
+    const [updated] = await this.db.db
+      .update(lists)
+      .set({
         name: dto.name,
         projectId: dto.projectId,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(lists.id, id))
+      .returning();
+    return updated;
   }
 
-  remove(id: string) {
-    return this.prisma.list.delete({
-      where: { id },
-    });
+  async remove(id: string) {
+    const [deleted] = await this.db.db
+      .delete(lists)
+      .where(eq(lists.id, id))
+      .returning();
+    return deleted;
   }
 }

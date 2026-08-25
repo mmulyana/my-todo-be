@@ -7,30 +7,38 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodoFilterInput, TodoView } from './dto/todo-filter.input';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { CurrentUser } from '@/auth/current-user.decorator';
 
 @Controller('todos')
+@UseGuards(JwtAuthGuard)
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Post()
-  create(@Body() createTodoDto: CreateTodoDto) {
-    return this.todosService.create(createTodoDto);
+  create(
+    @CurrentUser() user: { userId: string },
+    @Body() createTodoDto: CreateTodoDto,
+  ) {
+    return this.todosService.create(user.userId, createTodoDto);
   }
 
   @Get()
   findAll(
+    @CurrentUser() user: { userId: string },
     @Query('view') view?: TodoView,
     @Query('listId') listId?: string,
     @Query('q') q?: string,
     @Query('projectId') projectId?: string,
   ) {
     const filter: TodoFilterInput = { view, listId, q, projectId };
-    return this.todosService.findAll(filter);
+    return this.todosService.findAll(user.userId, filter);
   }
 
   @Get(':id')
@@ -39,8 +47,15 @@ export class TodosController {
   }
 
   @Post(':id/subtodos')
-  createSubtodo(@Param('id') id: string, @Body() body: { title: string }) {
-    return this.todosService.create({ title: body.title, parentId: id });
+  createSubtodo(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() body: { title: string },
+  ) {
+    return this.todosService.create(user.userId, {
+      title: body.title,
+      parentId: id,
+    });
   }
 
   @Get(':id/subtodos')

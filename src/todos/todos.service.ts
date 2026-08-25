@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { Prisma } from '@generated/prisma/client';
+import { DbService } from '@/db/db.service';
+import { todos, lists, projects, attachments } from '@/db/schema';
+import { eq, isNull, isNotNull, ilike, or, and, asc } from 'drizzle-orm';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodoFilterInput, TodoView } from './dto/todo-filter.input';
@@ -9,17 +10,18 @@ const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
 @Injectable()
 export class TodosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly db: DbService) {}
 
-  async create(dto: CreateTodoDto) {
+  async create(userId: string, dto: CreateTodoDto) {
     this.assertDate(dto.dueDate, 'dueDate');
     this.assertDate(dto.today, 'today');
     if (dto.parentId) {
       await this.assertCanHaveSubtodo(dto.parentId);
     }
 
-    return this.prisma.todo.create({
-      data: {
+    const [todo] = await this.db.db
+      .insert(todos)
+      .values({
         title: dto.title,
         note: dto.note ?? '',
         important: dto.important ?? false,
@@ -28,80 +30,99 @@ export class TodosService {
         parentId: dto.parentId ?? null,
         listId: dto.listId ?? null,
         projectId: dto.projectId ?? null,
-      },
-    });
+        userId,
+      })
+      .returning();
+
+    return todo;
   }
 
-  findAll(filter: TodoFilterInput = {}) {
-    const where: Prisma.TodoWhereInput = { parentId: null };
-
-    switch (filter.view) {
-      case TodoView.TODAY:
-        where.today = { not: null };
-        break;
-      case TodoView.IMPORTANT:
-        where.important = true;
-        break;
-      case TodoView.ALL:
-      default:
-        break;
-    }
-
-    if (filter.listId) {
-      where.listId = filter.listId;
-    }
-
-    if (filter.projectId) {
-      where.projectId = filter.projectId;
-    }
+  async findAll(userId: string, filter: TodoFilterInput = {}) {
+    const conditions = [isNull(todos.parentId), eq(todos.userId, userId)];
 
     if (filter.q) {
-      delete where.listId;
-      delete where.today;
-      delete where.important;
-      where.OR = [
-        { title: { contains: filter.q, mode: 'insensitive' } },
-        { note: { contains: filter.q, mode: 'insensitive' } },
-      ];
+      // Full-text search overrides other view filters
+      conditions.push(
+        or(
+          ilike(todos.title, `%${filter.q}%`),
+          ilike(todos.note, `%${filter.q}%`),
+        )!,
+      );
+    } else {
+      switch (filter.view) {
+        case TodoView.TODAY:
+          conditions.push(isNotNull(todos.today));
+          break;
+        case TodoView.IMPORTANT:
+          conditions.push(eq(todos.important, true));
+          break;
+        case TodoView.ALL:
+        default:
+          break;
+      }
+
+      if (filter.listId) {
+        conditions.push(eq(todos.listId, filter.listId));
+      }
+
+      if (filter.projectId) {
+        conditions.push(eq(todos.projectId, filter.projectId));
+      }
     }
 
-    return this.prisma.todo.findMany({ where, orderBy: { createdAt: 'asc' } });
+    return this.db.db
+      .select()
+      .from(todos)
+      .where(and(...conditions))
+      .orderBy(asc(todos.createdAt));
   }
 
   findSubtodos(parentId: string) {
-    return this.prisma.todo.findMany({
-      where: { parentId },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(todos)
+      .where(eq(todos.parentId, parentId))
+      .orderBy(asc(todos.createdAt));
   }
 
-  countSubtodos(parentId: string) {
-    return this.prisma.todo.count({ where: { parentId } });
+  async countSubtodos(parentId: string) {
+    const rows = await this.db.db
+      .select()
+      .from(todos)
+      .where(eq(todos.parentId, parentId));
+    return rows.length;
   }
 
-  findOne(id: string) {
-    return this.prisma.todo.findUnique({
-      where: { id },
-    });
+  async findOne(id: string) {
+    const [todo] = await this.db.db
+      .select()
+      .from(todos)
+      .where(eq(todos.id, id));
+    return todo ?? null;
   }
 
-  findList(listId: string) {
-    return this.prisma.list.findUnique({
-      where: { id: listId },
-    });
+  async findList(listId: string) {
+    const [list] = await this.db.db
+      .select()
+      .from(lists)
+      .where(eq(lists.id, listId));
+    return list ?? null;
   }
 
-  findProject(projectId: string) {
-    return this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async findProject(projectId: string) {
+    const [project] = await this.db.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
+    return project ?? null;
   }
 
   findAttachments(todoId: string) {
-    return this.prisma.attachment.findMany({
-      where: { todoId },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.todoId, todoId))
+      .orderBy(asc(attachments.createdAt));
   }
 
   async update(id: string, dto: UpdateTodoDto) {
@@ -116,9 +137,9 @@ export class TodosService {
       await this.assertCanHaveSubtodo(dto.parentId);
     }
 
-    return this.prisma.todo.update({
-      where: { id },
-      data: {
+    const [updated] = await this.db.db
+      .update(todos)
+      .set({
         title: dto.title,
         note: dto.note,
         completed: dto.completed,
@@ -128,14 +149,20 @@ export class TodosService {
         parentId: dto.parentId,
         listId: dto.listId,
         projectId: dto.projectId,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(todos.id, id))
+      .returning();
+
+    return updated;
   }
 
-  remove(id: string) {
-    return this.prisma.todo.delete({
-      where: { id },
-    });
+  async remove(id: string) {
+    const [deleted] = await this.db.db
+      .delete(todos)
+      .where(eq(todos.id, id))
+      .returning();
+    return deleted;
   }
 
   private assertDate(value: string | null | undefined, field: string) {
@@ -145,10 +172,10 @@ export class TodosService {
   }
 
   private async assertCanHaveSubtodo(parentId: string) {
-    const parent = await this.prisma.todo.findUnique({
-      where: { id: parentId },
-      select: { parentId: true },
-    });
+    const [parent] = await this.db.db
+      .select({ parentId: todos.parentId })
+      .from(todos)
+      .where(eq(todos.id, parentId));
 
     if (!parent) {
       throw new BadRequestException(`Todo ${parentId} tidak ditemukan`);
@@ -159,3 +186,4 @@ export class TodosService {
     }
   }
 }
+

@@ -17,6 +17,28 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Attachment {
+  id: ID!
+  filename: String!
+  url: String!
+  mimeType: String
+  size: Int
+  type: AttachmentType!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  todoId: String
+  todo: Todo
+  projectId: String
+  project: Project
+}
+
+"""Type of attachment: IMAGE, FILE, or LINK"""
+enum AttachmentType {
+  IMAGE
+  FILE
+  LINK
+}
+
 type Project {
   id: ID!
   name: String!
@@ -31,21 +53,6 @@ type Project {
   todos: [Todo!]!
   attachments: [Attachment!]!
   countTodo: Int!
-}
-
-type Attachment {
-  id: ID!
-  filename: String!
-  url: String!
-  mimeType: String
-  size: Int
-  type: AttachmentType!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  todoId: String
-  todo: Todo
-  projectId: String
-  project: Project
 }
 
 type Todo {
@@ -69,7 +76,22 @@ type Todo {
   attachments: [Attachment!]!
 }
 
+type User {
+  id: ID!
+  email: String!
+  username: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
 type Query {
+  me: User!
   todos(filter: TodoFilterInput): [Todo!]!
   todo(id: ID!): Todo
   lists: [List!]!
@@ -96,6 +118,9 @@ enum TodoView {
 }
 
 type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  refreshToken(token: String!): AuthPayload!
   createTodo(input: CreateTodoInput!): Todo!
   updateTodo(input: UpdateTodoInput!): Todo!
   removeTodo(id: ID!): Todo!
@@ -108,6 +133,17 @@ type Mutation {
   createAttachment(input: CreateAttachmentInput!): Attachment!
   updateAttachment(input: UpdateAttachmentInput!): Attachment!
   removeAttachment(id: ID!): Attachment!
+}
+
+input RegisterInput {
+  email: String!
+  username: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
 }
 
 input CreateTodoInput {
@@ -158,13 +194,6 @@ input UpdateProjectInput {
   code: String
   description: String
   parentId: String
-}
-
-"""Type of attachment: IMAGE, FILE, or LINK"""
-enum AttachmentType {
-  IMAGE
-  FILE
-  LINK
 }
 
 input CreateAttachmentInput {

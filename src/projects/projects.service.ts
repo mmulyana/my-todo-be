@@ -1,73 +1,90 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
+import { DbService } from '@/db/db.service';
+import { projects, lists, todos, attachments } from '@/db/schema';
+import { eq, isNull, and, asc } from 'drizzle-orm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly db: DbService) {}
 
-  create(dto: CreateProjectDto) {
-    return this.prisma.project.create({
-      data: {
+  async create(userId: string, dto: CreateProjectDto) {
+    const [project] = await this.db.db
+      .insert(projects)
+      .values({
         name: dto.name,
         code: dto.code,
         description: dto.description,
         parentId: dto.parentId ?? null,
-      },
-    });
+        userId,
+      })
+      .returning();
+    return project;
   }
 
-  findAll() {
-    return this.prisma.project.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
+  findAll(userId: string) {
+    return this.db.db
+      .select()
+      .from(projects)
+      .where(eq(projects.userId, userId))
+      .orderBy(asc(projects.createdAt));
   }
 
-  findOne(id: string) {
-    return this.prisma.project.findUnique({
-      where: { id },
-    });
+  async findOne(id: string) {
+    const [project] = await this.db.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, id));
+    return project ?? null;
   }
 
-  findByCode(code: string) {
-    return this.prisma.project.findUnique({
-      where: { code },
-    });
+  async findByCode(code: string) {
+    const [project] = await this.db.db
+      .select()
+      .from(projects)
+      .where(eq(projects.code, code));
+    return project ?? null;
   }
 
   findChildren(parentId: string) {
-    return this.prisma.project.findMany({
-      where: { parentId },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(projects)
+      .where(eq(projects.parentId, parentId))
+      .orderBy(asc(projects.createdAt));
   }
 
   findLists(projectId: string) {
-    return this.prisma.list.findMany({
-      where: { projectId },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(lists)
+      .where(eq(lists.projectId, projectId))
+      .orderBy(asc(lists.createdAt));
   }
 
   findTodos(projectId: string) {
-    return this.prisma.todo.findMany({
-      where: { projectId, parentId: null },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(todos)
+      .where(and(eq(todos.projectId, projectId), isNull(todos.parentId)))
+      .orderBy(asc(todos.createdAt));
   }
 
-  countTodos(projectId: string) {
-    return this.prisma.todo.count({
-      where: { projectId },
-    });
+  async countTodos(projectId: string) {
+    const rows = await this.db.db
+      .select()
+      .from(todos)
+      .where(eq(todos.projectId, projectId));
+    return rows.length;
   }
 
   findAttachments(projectId: string) {
-    return this.prisma.attachment.findMany({
-      where: { projectId },
-      orderBy: { createdAt: 'asc' },
-    });
+    return this.db.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.projectId, projectId))
+      .orderBy(asc(attachments.createdAt));
   }
 
   async update(id: string, dto: UpdateProjectDto) {
@@ -75,21 +92,27 @@ export class ProjectsService {
       await this.assertNotOwnDescendant(id, dto.parentId);
     }
 
-    return this.prisma.project.update({
-      where: { id },
-      data: {
+    const [updated] = await this.db.db
+      .update(projects)
+      .set({
         name: dto.name,
         code: dto.code,
         description: dto.description,
         parentId: dto.parentId,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(projects.id, id))
+      .returning();
+
+    return updated;
   }
 
-  remove(id: string) {
-    return this.prisma.project.delete({
-      where: { id },
-    });
+  async remove(id: string) {
+    const [deleted] = await this.db.db
+      .delete(projects)
+      .where(eq(projects.id, id))
+      .returning();
+    return deleted;
   }
 
   private async assertNotOwnDescendant(id: string, parentId: string) {
@@ -104,10 +127,10 @@ export class ProjectsService {
         );
       }
 
-      const parent = await this.prisma.project.findUnique({
-        where: { id: currentId },
-        select: { parentId: true },
-      });
+      const [parent] = await this.db.db
+        .select({ parentId: projects.parentId })
+        .from(projects)
+        .where(eq(projects.id, currentId));
 
       if (!parent) {
         throw new BadRequestException(`Project ${currentId} tidak ditemukan`);

@@ -1,3 +1,4 @@
+import { UseGuards } from '@nestjs/common';
 import {
   Resolver,
   Query,
@@ -13,8 +14,11 @@ import { CreateListInput } from './dto/create-list.input';
 import { UpdateListInput } from './dto/update-list.input';
 import { Todo } from '@/todos/models/todo.model';
 import { Project } from '@/projects/models/project.model';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { CurrentUser } from '@/auth/current-user.decorator';
 
 @Resolver(() => List)
+@UseGuards(JwtAuthGuard)
 export class ListsResolver {
   constructor(private readonly listsService: ListsService) {}
 
@@ -32,8 +36,8 @@ export class ListsResolver {
   }
 
   @Query(() => [List], { name: 'lists' })
-  findAll() {
-    return this.listsService.findAll();
+  findAll(@CurrentUser() user: { userId: string }) {
+    return this.listsService.findAll(user.userId);
   }
 
   @Query(() => List, { name: 'list', nullable: true })
@@ -42,8 +46,11 @@ export class ListsResolver {
   }
 
   @Mutation(() => List)
-  createList(@Args('input') input: CreateListInput) {
-    return this.listsService.create(input);
+  createList(
+    @CurrentUser() user: { userId: string },
+    @Args('input') input: CreateListInput,
+  ) {
+    return this.listsService.create(user.userId, input);
   }
 
   @Mutation(() => List)
@@ -56,3 +63,4 @@ export class ListsResolver {
     return this.listsService.remove(id);
   }
 }
+

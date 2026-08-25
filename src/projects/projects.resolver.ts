@@ -1,3 +1,4 @@
+import { UseGuards } from '@nestjs/common';
 import {
   Resolver,
   Query,
@@ -15,8 +16,11 @@ import { UpdateProjectInput } from './dto/update-project.input';
 import { Todo } from '@/todos/models/todo.model';
 import { List } from '@/lists/models/list.model';
 import { Attachment } from '@/attachments/models/attachment.model';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { CurrentUser } from '@/auth/current-user.decorator';
 
 @Resolver(() => Project)
+@UseGuards(JwtAuthGuard)
 export class ProjectsResolver {
   constructor(private readonly projectsService: ProjectsService) {}
 
@@ -54,13 +58,16 @@ export class ProjectsResolver {
   }
 
   @Mutation(() => Project)
-  createProject(@Args('input') input: CreateProjectInput) {
-    return this.projectsService.create(input);
+  createProject(
+    @CurrentUser() user: { userId: string },
+    @Args('input') input: CreateProjectInput,
+  ) {
+    return this.projectsService.create(user.userId, input);
   }
 
   @Query(() => [Project], { name: 'projects' })
-  findAll() {
-    return this.projectsService.findAll();
+  findAll(@CurrentUser() user: { userId: string }) {
+    return this.projectsService.findAll(user.userId);
   }
 
   @Query(() => Project, { name: 'project', nullable: true })
@@ -83,3 +90,4 @@ export class ProjectsResolver {
     return this.projectsService.remove(id);
   }
 }
+
