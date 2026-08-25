@@ -3,7 +3,7 @@ name: CI-CD my-todo-be
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   ci-cd:
