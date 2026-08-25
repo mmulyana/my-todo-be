@@ -24,4 +24,7 @@ export class TodoFilterInput {
 
   @Field(() => String, { nullable: true })
   projectId?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  completed?: boolean;
 }

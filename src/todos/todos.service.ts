@@ -70,6 +70,10 @@ export class TodosService {
       }
     }
 
+    if (filter.completed !== undefined && filter.completed !== null) {
+      conditions.push(eq(todos.completed, filter.completed));
+    }
+
     return this.db.db
       .select()
       .from(todos)
