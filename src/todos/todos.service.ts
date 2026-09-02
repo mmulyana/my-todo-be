@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DbService } from '@/db/db.service';
 import { todos, lists, projects, attachments } from '@/db/schema';
-import { eq, isNull, isNotNull, ilike, or, and, asc } from 'drizzle-orm';
+import { eq, isNull, isNotNull, ilike, or, and, asc, sql } from 'drizzle-orm';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodoFilterInput, TodoView } from './dto/todo-filter.input';
@@ -16,7 +16,7 @@ export class TodosService {
     this.assertDate(dto.dueDate, 'dueDate');
     this.assertDate(dto.today, 'today');
     if (dto.parentId) {
-      await this.assertCanHaveSubtodo(dto.parentId);
+      await this.assertParentExists(dto.parentId);
     }
 
     const [todo] = await this.db.db
@@ -90,11 +90,29 @@ export class TodosService {
   }
 
   async countSubtodos(parentId: string) {
-    const rows = await this.db.db
-      .select()
-      .from(todos)
-      .where(eq(todos.parentId, parentId));
-    return rows.length;
+    const result = await this.db.db.execute<{ total: number }>(sql`
+      WITH RECURSIVE descendants AS (
+        SELECT id FROM "Todo" WHERE "parentId" = ${parentId}
+        UNION ALL
+        SELECT t.id FROM "Todo" t
+        INNER JOIN descendants d ON t."parentId" = d.id
+      )
+      SELECT count(*)::int AS total FROM descendants
+    `);
+    return result.rows[0].total;
+  }
+
+  async countCompletedSubtodos(parentId: string) {
+    const result = await this.db.db.execute<{ total: number }>(sql`
+      WITH RECURSIVE descendants AS (
+        SELECT id, completed FROM "Todo" WHERE "parentId" = ${parentId}
+        UNION ALL
+        SELECT t.id, t.completed FROM "Todo" t
+        INNER JOIN descendants d ON t."parentId" = d.id
+      )
+      SELECT count(*)::int AS total FROM descendants WHERE completed
+    `);
+    return result.rows[0].total;
   }
 
   async findOne(id: string) {
@@ -138,7 +156,8 @@ export class TodosService {
           'Todo tidak bisa jadi parent dirinya sendiri',
         );
       }
-      await this.assertCanHaveSubtodo(dto.parentId);
+      await this.assertParentExists(dto.parentId);
+      await this.assertNotOwnDescendant(id, dto.parentId);
     }
 
     const [updated] = await this.db.db
@@ -175,18 +194,39 @@ export class TodosService {
     }
   }
 
-  private async assertCanHaveSubtodo(parentId: string) {
+  private async assertParentExists(parentId: string) {
     const [parent] = await this.db.db
-      .select({ parentId: todos.parentId })
+      .select({ id: todos.id })
       .from(todos)
       .where(eq(todos.id, parentId));
 
     if (!parent) {
       throw new BadRequestException(`Todo ${parentId} tidak ditemukan`);
     }
+  }
 
-    if (parent.parentId) {
-      throw new BadRequestException('Subtodo tidak boleh punya subtodo lagi');
+  private async assertNotOwnDescendant(id: string, newParentId: string) {
+    let cursor: string | null = newParentId;
+
+    while (cursor !== null) {
+      const currentId: string = cursor;
+
+      if (currentId === id) {
+        throw new BadRequestException(
+          'Todo tidak bisa dipindah ke dalam turunannya sendiri',
+        );
+      }
+
+      const [parent] = await this.db.db
+        .select({ parentId: todos.parentId })
+        .from(todos)
+        .where(eq(todos.id, currentId));
+
+      if (!parent) {
+        throw new BadRequestException(`Todo ${currentId} tidak ditemukan`);
+      }
+
+      cursor = parent.parentId;
     }
   }
 }

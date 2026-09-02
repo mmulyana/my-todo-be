@@ -43,4 +43,7 @@ export class Project {
 
   @Field(() => Int)
   countTodo?: number;
+
+  @Field(() => Int)
+  completedTodos?: number;
 }

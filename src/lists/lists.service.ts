@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DbService } from '@/db/db.service';
 import { lists, projects, todos } from '@/db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, and, asc, count } from 'drizzle-orm';
 import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
 
@@ -51,6 +51,22 @@ export class ListsService {
       .from(todos)
       .where(eq(todos.listId, listId))
       .orderBy(asc(todos.createdAt));
+  }
+
+  async countTodos(listId: string) {
+    const [result] = await this.db.db
+      .select({ value: count() })
+      .from(todos)
+      .where(eq(todos.listId, listId));
+    return result.value;
+  }
+
+  async countCompletedTodos(listId: string) {
+    const [result] = await this.db.db
+      .select({ value: count() })
+      .from(todos)
+      .where(and(eq(todos.listId, listId), eq(todos.completed, true)));
+    return result.value;
   }
 
   async update(id: string, dto: UpdateListDto) {

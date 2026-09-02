@@ -44,6 +44,9 @@ export class Todo {
   @Field(() => Int)
   subtodoCount?: number;
 
+  @Field(() => Int)
+  completedTodos?: number;
+
   @Field(() => String, { nullable: true })
   listId?: string | null;
 

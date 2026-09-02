@@ -5,6 +5,7 @@ import {
   Mutation,
   Args,
   ID,
+  Int,
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
@@ -33,6 +34,16 @@ export class ListsResolver {
   @ResolveField(() => [Todo])
   todos(@Parent() list: List) {
     return this.listsService.findTodos(list.id);
+  }
+
+  @ResolveField(() => Int)
+  totalTodo(@Parent() list: List) {
+    return this.listsService.countTodos(list.id);
+  }
+
+  @ResolveField(() => Int)
+  completedTodos(@Parent() list: List) {
+    return this.listsService.countCompletedTodos(list.id);
   }
 
   @Query(() => [List], { name: 'lists' })

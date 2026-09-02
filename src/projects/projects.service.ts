@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DbService } from '@/db/db.service';
 import { projects, lists, todos, attachments } from '@/db/schema';
-import { eq, isNull, and, asc } from 'drizzle-orm';
+import { eq, isNull, and, asc, count } from 'drizzle-orm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
@@ -72,11 +72,19 @@ export class ProjectsService {
   }
 
   async countTodos(projectId: string) {
-    const rows = await this.db.db
-      .select()
+    const [result] = await this.db.db
+      .select({ value: count() })
       .from(todos)
       .where(eq(todos.projectId, projectId));
-    return rows.length;
+    return result.value;
+  }
+
+  async countCompletedTodos(projectId: string) {
+    const [result] = await this.db.db
+      .select({ value: count() })
+      .from(todos)
+      .where(and(eq(todos.projectId, projectId), eq(todos.completed, true)));
+    return result.value;
   }
 
   findAttachments(projectId: string) {

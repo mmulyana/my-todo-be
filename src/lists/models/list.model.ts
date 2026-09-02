@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 import { Todo } from '@/todos/models/todo.model';
 import { Project } from '@/projects/models/project.model';
 
@@ -24,4 +24,10 @@ export class List {
 
   @Field(() => [Todo])
   todos?: Todo[];
+
+  @Field(() => Int)
+  totalTodo?: number;
+
+  @Field(() => Int)
+  completedTodos?: number;
 }

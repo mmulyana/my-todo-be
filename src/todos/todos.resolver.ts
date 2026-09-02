@@ -20,8 +20,11 @@ import { Attachment } from '@/attachments/models/attachment.model';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { CurrentUser } from '@/auth/current-user.decorator';
 
+// Batas kedalaman nested `subtodos` yang boleh diminta dalam satu query
+const MAX_NESTED_SUBTODOS_DEPTH = 1;
+
 interface ResolvedTodo extends Todo {
-  isSubtodo?: boolean;
+  subtodoDepth?: number;
 }
 
 @Resolver(() => Todo)
@@ -36,19 +39,26 @@ export class TodosResolver {
 
   @ResolveField(() => [Todo])
   async subtodos(@Parent() todo: ResolvedTodo) {
-    if (todo.isSubtodo) {
+    const depth = (todo.subtodoDepth ?? 0) + 1;
+
+    if (depth > MAX_NESTED_SUBTODOS_DEPTH) {
       throw new BadRequestException(
-        'subtodos can only be queried one level deep. Fetch deeper levels with todo(id)',
+        `subtodos can only be nested ${MAX_NESTED_SUBTODOS_DEPTH} levels deep in one query. Fetch deeper levels with todo(id)`,
       );
     }
 
     const subtodos = await this.todosService.findSubtodos(todo.id);
-    return subtodos.map((subtodo) => ({ ...subtodo, isSubtodo: true }));
+    return subtodos.map((subtodo) => ({ ...subtodo, subtodoDepth: depth }));
   }
 
   @ResolveField(() => Int)
   subtodoCount(@Parent() todo: Todo) {
     return this.todosService.countSubtodos(todo.id);
+  }
+
+  @ResolveField(() => Int)
+  completedTodos(@Parent() todo: Todo) {
+    return this.todosService.countCompletedSubtodos(todo.id);
   }
 
   @ResolveField(() => Todo, { nullable: true })

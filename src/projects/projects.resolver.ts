@@ -57,6 +57,11 @@ export class ProjectsResolver {
     return this.projectsService.countTodos(project.id);
   }
 
+  @ResolveField(() => Int)
+  completedTodos(@Parent() project: Project) {
+    return this.projectsService.countCompletedTodos(project.id);
+  }
+
   @Mutation(() => Project)
   createProject(
     @CurrentUser() user: { userId: string },
