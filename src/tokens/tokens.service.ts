@@ -46,13 +46,21 @@ export class TokensService {
   }
 
   async findAll(userId: string) {
-    const rows = await this.db.db
-      .select()
+    return this.db.db
+      .select({
+        id: apiTokens.id,
+        userId: apiTokens.userId,
+        name: apiTokens.name,
+        prefix: apiTokens.prefix,
+        scopes: apiTokens.scopes,
+        lastUsedAt: apiTokens.lastUsedAt,
+        expiresAt: apiTokens.expiresAt,
+        revokedAt: apiTokens.revokedAt,
+        createdAt: apiTokens.createdAt,
+      })
       .from(apiTokens)
       .where(eq(apiTokens.userId, userId))
       .orderBy(desc(apiTokens.createdAt));
-
-    return rows.map(({ tokenHash: _tokenHash, ...rest }) => rest);
   }
 
   async revoke(id: string, userId: string) {
@@ -72,8 +80,17 @@ export class TokensService {
       throw new NotFoundException('Token tidak ditemukan');
     }
 
-    const { tokenHash: _tokenHash, ...rest } = revoked;
-    return rest;
+    return {
+      id: revoked.id,
+      userId: revoked.userId,
+      name: revoked.name,
+      prefix: revoked.prefix,
+      scopes: revoked.scopes,
+      lastUsedAt: revoked.lastUsedAt,
+      expiresAt: revoked.expiresAt,
+      revokedAt: revoked.revokedAt,
+      createdAt: revoked.createdAt,
+    };
   }
 
   /**
