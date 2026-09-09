@@ -33,22 +33,26 @@ export class ListsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.listsService.findOne(id);
+  findOne(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.listsService.findOne(id, user.userId);
   }
 
   @Get(':id/todos')
-  findTodos(@Param('id') id: string) {
-    return this.listsService.findTodos(id);
+  findTodos(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.listsService.findTodos(id, user.userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateListDto: UpdateListDto) {
-    return this.listsService.update(id, updateListDto);
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() updateListDto: UpdateListDto,
+  ) {
+    return this.listsService.update(id, updateListDto, user.userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.listsService.remove(id);
+  remove(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.listsService.remove(id, user.userId);
   }
 }

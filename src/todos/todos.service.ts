@@ -16,7 +16,7 @@ export class TodosService {
     this.assertDate(dto.dueDate, 'dueDate');
     this.assertDate(dto.today, 'today');
     if (dto.parentId) {
-      await this.assertParentExists(dto.parentId);
+      await this.assertParentExists(dto.parentId, userId);
     }
 
     const [todo] = await this.db.db
@@ -81,61 +81,63 @@ export class TodosService {
       .orderBy(asc(todos.createdAt));
   }
 
-  findSubtodos(parentId: string) {
+  findSubtodos(parentId: string, userId: string) {
     return this.db.db
       .select()
       .from(todos)
-      .where(eq(todos.parentId, parentId))
+      .where(and(eq(todos.parentId, parentId), eq(todos.userId, userId)))
       .orderBy(asc(todos.createdAt));
   }
 
-  async countSubtodos(parentId: string) {
+  async countSubtodos(parentId: string, userId: string) {
     const result = await this.db.db.execute<{ total: number }>(sql`
       WITH RECURSIVE descendants AS (
-        SELECT id FROM "Todo" WHERE "parentId" = ${parentId}
+        SELECT id FROM "Todo" WHERE "parentId" = ${parentId} AND "userId" = ${userId}
         UNION ALL
         SELECT t.id FROM "Todo" t
         INNER JOIN descendants d ON t."parentId" = d.id
+        WHERE t."userId" = ${userId}
       )
       SELECT count(*)::int AS total FROM descendants
     `);
     return result.rows[0].total;
   }
 
-  async countCompletedSubtodos(parentId: string) {
+  async countCompletedSubtodos(parentId: string, userId: string) {
     const result = await this.db.db.execute<{ total: number }>(sql`
       WITH RECURSIVE descendants AS (
-        SELECT id, completed FROM "Todo" WHERE "parentId" = ${parentId}
+        SELECT id, completed FROM "Todo" WHERE "parentId" = ${parentId} AND "userId" = ${userId}
         UNION ALL
         SELECT t.id, t.completed FROM "Todo" t
         INNER JOIN descendants d ON t."parentId" = d.id
+        WHERE t."userId" = ${userId}
       )
       SELECT count(*)::int AS total FROM descendants WHERE completed
     `);
     return result.rows[0].total;
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const [todo] = await this.db.db
       .select()
       .from(todos)
-      .where(eq(todos.id, id));
+      .where(and(eq(todos.id, id), eq(todos.userId, userId)));
     return todo ?? null;
   }
 
-  async findList(listId: string) {
+  async findList(listId: string, userId: string) {
     const [list] = await this.db.db
       .select()
       .from(lists)
-      .where(eq(lists.id, listId));
+      .where(and(eq(lists.id, listId), eq(lists.userId, userId)));
     return list ?? null;
   }
 
-  async findProject(projectId: string) {
+  async findProject(projectId: string, userId: string) {
     const [project] = await this.db.db
       .select()
       .from(projects)
-      .where(eq(projects.id, projectId));
+      .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
     return project ?? null;
   }
 
@@ -147,7 +149,7 @@ export class TodosService {
       .orderBy(asc(attachments.createdAt));
   }
 
-  async update(id: string, dto: UpdateTodoDto) {
+  async update(id: string, dto: UpdateTodoDto, userId: string) {
     this.assertDate(dto.dueDate, 'dueDate');
     this.assertDate(dto.today, 'today');
     if (dto.parentId) {
@@ -156,7 +158,7 @@ export class TodosService {
           'Todo tidak bisa jadi parent dirinya sendiri',
         );
       }
-      await this.assertParentExists(dto.parentId);
+      await this.assertParentExists(dto.parentId, userId);
       await this.assertNotOwnDescendant(id, dto.parentId);
     }
 
@@ -174,18 +176,18 @@ export class TodosService {
         projectId: dto.projectId,
         updatedAt: new Date(),
       })
-      .where(eq(todos.id, id))
+      .where(and(eq(todos.id, id), eq(todos.userId, userId)))
       .returning();
 
-    return updated;
+    return updated ?? null;
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     const [deleted] = await this.db.db
       .delete(todos)
-      .where(eq(todos.id, id))
+      .where(and(eq(todos.id, id), eq(todos.userId, userId)))
       .returning();
-    return deleted;
+    return deleted ?? null;
   }
 
   private assertDate(value: string | null | undefined, field: string) {
@@ -194,11 +196,11 @@ export class TodosService {
     }
   }
 
-  private async assertParentExists(parentId: string) {
+  private async assertParentExists(parentId: string, userId: string) {
     const [parent] = await this.db.db
       .select({ id: todos.id })
       .from(todos)
-      .where(eq(todos.id, parentId));
+      .where(and(eq(todos.id, parentId), eq(todos.userId, userId)));
 
     if (!parent) {
       throw new BadRequestException(`Todo ${parentId} tidak ditemukan`);
@@ -230,4 +232,3 @@ export class TodosService {
     }
   }
 }
-

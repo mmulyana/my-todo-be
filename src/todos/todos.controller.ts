@@ -49,8 +49,8 @@ export class TodosController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.todosService.findOne(id);
+  findOne(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.todosService.findOne(id, user.userId);
   }
 
   @Post(':id/subtodos')
@@ -66,17 +66,24 @@ export class TodosController {
   }
 
   @Get(':id/subtodos')
-  findSubtodos(@Param('id') id: string) {
-    return this.todosService.findSubtodos(id);
+  findSubtodos(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+  ) {
+    return this.todosService.findSubtodos(id, user.userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTodoDto: UpdateTodoDto) {
-    return this.todosService.update(id, updateTodoDto);
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() updateTodoDto: UpdateTodoDto,
+  ) {
+    return this.todosService.update(id, updateTodoDto, user.userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.todosService.remove(id);
+  remove(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.todosService.remove(id, user.userId);
   }
 }

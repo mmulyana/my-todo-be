@@ -29,19 +29,25 @@ export class AttachmentsResolver {
   ) {}
 
   @ResolveField(() => Todo, { nullable: true })
-  todo(@Parent() attachment: Attachment) {
+  todo(
+    @Parent() attachment: Attachment,
+    @CurrentUser() user: { userId: string },
+  ) {
     if (!attachment.todoId) {
       return null;
     }
-    return this.todosService.findOne(attachment.todoId);
+    return this.todosService.findOne(attachment.todoId, user.userId);
   }
 
   @ResolveField(() => Project, { nullable: true })
-  project(@Parent() attachment: Attachment) {
+  project(
+    @Parent() attachment: Attachment,
+    @CurrentUser() user: { userId: string },
+  ) {
     if (!attachment.projectId) {
       return null;
     }
-    return this.projectsService.findOne(attachment.projectId);
+    return this.projectsService.findOne(attachment.projectId, user.userId);
   }
 
   @Mutation(() => Attachment)
@@ -75,4 +81,3 @@ export class AttachmentsResolver {
     return this.attachmentsService.remove(id);
   }
 }
-

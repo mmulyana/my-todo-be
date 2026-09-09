@@ -92,6 +92,25 @@ export const todos = pgTable(
   ],
 );
 
+export const apiTokens = pgTable(
+  'ApiToken',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('userId').notNull(),
+    name: text('name').notNull(),
+    prefix: text('prefix').notNull(),
+    tokenHash: text('tokenHash').notNull().unique(),
+    scopes: text('scopes').notNull().default('read,write'),
+    lastUsedAt: timestamp('lastUsedAt', { withTimezone: true }),
+    expiresAt: timestamp('expiresAt', { withTimezone: true }),
+    revokedAt: timestamp('revokedAt', { withTimezone: true }),
+    createdAt: timestamp('createdAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index('api_token_user_id_idx').on(table.userId)],
+);
+
 export const attachments = pgTable('Attachment', {
   id: uuid('id').primaryKey().defaultRandom(),
   filename: text('filename').notNull(),
@@ -129,3 +148,5 @@ export type NewProject = typeof projects.$inferInsert;
 export type Attachment = typeof attachments.$inferSelect;
 export type NewAttachment = typeof attachments.$inferInsert;
 
+export type ApiToken = typeof apiTokens.$inferSelect;
+export type NewApiToken = typeof apiTokens.$inferInsert;

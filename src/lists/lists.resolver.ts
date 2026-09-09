@@ -32,8 +32,8 @@ export class ListsResolver {
   }
 
   @ResolveField(() => [Todo])
-  todos(@Parent() list: List) {
-    return this.listsService.findTodos(list.id);
+  todos(@Parent() list: List, @CurrentUser() user: { userId: string }) {
+    return this.listsService.findTodos(list.id, user.userId);
   }
 
   @ResolveField(() => Int)
@@ -52,8 +52,11 @@ export class ListsResolver {
   }
 
   @Query(() => List, { name: 'list', nullable: true })
-  findOne(@Args('id', { type: () => ID }) id: string) {
-    return this.listsService.findOne(id);
+  findOne(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.listsService.findOne(id, user.userId);
   }
 
   @Mutation(() => List)
@@ -65,13 +68,18 @@ export class ListsResolver {
   }
 
   @Mutation(() => List)
-  updateList(@Args('input') input: UpdateListInput) {
-    return this.listsService.update(input.id, input);
+  updateList(
+    @Args('input') input: UpdateListInput,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.listsService.update(input.id, input, user.userId);
   }
 
   @Mutation(() => List)
-  removeList(@Args('id', { type: () => ID }) id: string) {
-    return this.listsService.remove(id);
+  removeList(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.listsService.remove(id, user.userId);
   }
 }
-
