@@ -38,7 +38,10 @@ export class TodosResolver {
   }
 
   @ResolveField(() => [Todo])
-  async subtodos(@Parent() todo: ResolvedTodo) {
+  async subtodos(
+    @Parent() todo: ResolvedTodo,
+    @CurrentUser() user: { userId: string },
+  ) {
     const depth = (todo.subtodoDepth ?? 0) + 1;
 
     if (depth > MAX_NESTED_SUBTODOS_DEPTH) {
@@ -47,42 +50,45 @@ export class TodosResolver {
       );
     }
 
-    const subtodos = await this.todosService.findSubtodos(todo.id);
+    const subtodos = await this.todosService.findSubtodos(todo.id, user.userId);
     return subtodos.map((subtodo) => ({ ...subtodo, subtodoDepth: depth }));
   }
 
   @ResolveField(() => Int)
-  subtodoCount(@Parent() todo: Todo) {
-    return this.todosService.countSubtodos(todo.id);
+  subtodoCount(@Parent() todo: Todo, @CurrentUser() user: { userId: string }) {
+    return this.todosService.countSubtodos(todo.id, user.userId);
   }
 
   @ResolveField(() => Int)
-  completedTodos(@Parent() todo: Todo) {
-    return this.todosService.countCompletedSubtodos(todo.id);
+  completedTodos(
+    @Parent() todo: Todo,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.todosService.countCompletedSubtodos(todo.id, user.userId);
   }
 
   @ResolveField(() => Todo, { nullable: true })
-  parent(@Parent() todo: Todo) {
+  parent(@Parent() todo: Todo, @CurrentUser() user: { userId: string }) {
     if (!todo.parentId) {
       return null;
     }
-    return this.todosService.findOne(todo.parentId);
+    return this.todosService.findOne(todo.parentId, user.userId);
   }
 
   @ResolveField(() => List, { nullable: true })
-  list(@Parent() todo: Todo) {
+  list(@Parent() todo: Todo, @CurrentUser() user: { userId: string }) {
     if (!todo.listId) {
       return null;
     }
-    return this.todosService.findList(todo.listId);
+    return this.todosService.findList(todo.listId, user.userId);
   }
 
   @ResolveField(() => Project, { nullable: true })
-  project(@Parent() todo: Todo) {
+  project(@Parent() todo: Todo, @CurrentUser() user: { userId: string }) {
     if (!todo.projectId) {
       return null;
     }
-    return this.todosService.findProject(todo.projectId);
+    return this.todosService.findProject(todo.projectId, user.userId);
   }
 
   @Query(() => [Todo], { name: 'todos' })
@@ -95,8 +101,11 @@ export class TodosResolver {
   }
 
   @Query(() => Todo, { name: 'todo', nullable: true })
-  findOne(@Args('id', { type: () => ID }) id: string) {
-    return this.todosService.findOne(id);
+  findOne(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.todosService.findOne(id, user.userId);
   }
 
   @Mutation(() => Todo)
@@ -108,12 +117,18 @@ export class TodosResolver {
   }
 
   @Mutation(() => Todo)
-  updateTodo(@Args('input') input: UpdateTodoInput) {
-    return this.todosService.update(input.id, input);
+  updateTodo(
+    @Args('input') input: UpdateTodoInput,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.todosService.update(input.id, input, user.userId);
   }
 
   @Mutation(() => Todo)
-  removeTodo(@Args('id', { type: () => ID }) id: string) {
-    return this.todosService.remove(id);
+  removeTodo(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.todosService.remove(id, user.userId);
   }
 }

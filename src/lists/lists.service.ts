@@ -29,11 +29,11 @@ export class ListsService {
       .orderBy(asc(lists.createdAt));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const [list] = await this.db.db
       .select()
       .from(lists)
-      .where(eq(lists.id, id));
+      .where(and(eq(lists.id, id), eq(lists.userId, userId)));
     return list ?? null;
   }
 
@@ -45,11 +45,11 @@ export class ListsService {
     return project ?? null;
   }
 
-  findTodos(listId: string) {
+  findTodos(listId: string, userId: string) {
     return this.db.db
       .select()
       .from(todos)
-      .where(eq(todos.listId, listId))
+      .where(and(eq(todos.listId, listId), eq(todos.userId, userId)))
       .orderBy(asc(todos.createdAt));
   }
 
@@ -69,7 +69,7 @@ export class ListsService {
     return result.value;
   }
 
-  async update(id: string, dto: UpdateListDto) {
+  async update(id: string, dto: UpdateListDto, userId: string) {
     const [updated] = await this.db.db
       .update(lists)
       .set({
@@ -77,16 +77,16 @@ export class ListsService {
         projectId: dto.projectId,
         updatedAt: new Date(),
       })
-      .where(eq(lists.id, id))
+      .where(and(eq(lists.id, id), eq(lists.userId, userId)))
       .returning();
-    return updated;
+    return updated ?? null;
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     const [deleted] = await this.db.db
       .delete(lists)
-      .where(eq(lists.id, id))
+      .where(and(eq(lists.id, id), eq(lists.userId, userId)))
       .returning();
-    return deleted;
+    return deleted ?? null;
   }
 }

@@ -33,32 +33,42 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(id);
+  findOne(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.projectsService.findOne(id, user.userId);
   }
 
   @Get('code/:code')
-  findByCode(@Param('code') code: string) {
-    return this.projectsService.findByCode(code);
+  findByCode(
+    @CurrentUser() user: { userId: string },
+    @Param('code') code: string,
+  ) {
+    return this.projectsService.findByCode(code, user.userId);
   }
 
   @Get(':id/children')
-  findChildren(@Param('id') id: string) {
-    return this.projectsService.findChildren(id);
+  findChildren(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+  ) {
+    return this.projectsService.findChildren(id, user.userId);
   }
 
   @Get(':id/todos/count')
-  countTodos(@Param('id') id: string) {
-    return this.projectsService.countTodos(id);
+  countTodos(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.projectsService.countTodos(id, user.userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(id, updateProjectDto);
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
+    return this.projectsService.update(id, updateProjectDto, user.userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectsService.remove(id);
+  remove(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.projectsService.remove(id, user.userId);
   }
 }

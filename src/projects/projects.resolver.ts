@@ -30,16 +30,19 @@ export class ProjectsResolver {
   }
 
   @ResolveField(() => [Project])
-  children(@Parent() project: Project) {
-    return this.projectsService.findChildren(project.id);
+  children(
+    @Parent() project: Project,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.findChildren(project.id, user.userId);
   }
 
   @ResolveField(() => Project, { nullable: true })
-  parent(@Parent() project: Project) {
+  parent(@Parent() project: Project, @CurrentUser() user: { userId: string }) {
     if (!project.parentId) {
       return null;
     }
-    return this.projectsService.findOne(project.parentId);
+    return this.projectsService.findOne(project.parentId, user.userId);
   }
 
   @ResolveField(() => [List])
@@ -53,8 +56,11 @@ export class ProjectsResolver {
   }
 
   @ResolveField(() => Int)
-  countTodo(@Parent() project: Project) {
-    return this.projectsService.countTodos(project.id);
+  countTodo(
+    @Parent() project: Project,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.countTodos(project.id, user.userId);
   }
 
   @ResolveField(() => Int)
@@ -76,23 +82,34 @@ export class ProjectsResolver {
   }
 
   @Query(() => Project, { name: 'project', nullable: true })
-  findOne(@Args('id', { type: () => ID }) id: string) {
-    return this.projectsService.findOne(id);
+  findOne(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.findOne(id, user.userId);
   }
 
   @Query(() => Project, { name: 'projectByCode', nullable: true })
-  findByCode(@Args('code', { type: () => String }) code: string) {
-    return this.projectsService.findByCode(code);
+  findByCode(
+    @Args('code', { type: () => String }) code: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.findByCode(code, user.userId);
   }
 
   @Mutation(() => Project)
-  updateProject(@Args('input') input: UpdateProjectInput) {
-    return this.projectsService.update(input.id, input);
+  updateProject(
+    @Args('input') input: UpdateProjectInput,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.update(input.id, input, user.userId);
   }
 
   @Mutation(() => Project)
-  removeProject(@Args('id', { type: () => ID }) id: string) {
-    return this.projectsService.remove(id);
+  removeProject(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.remove(id, user.userId);
   }
 }
-

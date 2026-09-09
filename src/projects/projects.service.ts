@@ -31,27 +31,27 @@ export class ProjectsService {
       .orderBy(asc(projects.createdAt));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const [project] = await this.db.db
       .select()
       .from(projects)
-      .where(eq(projects.id, id));
+      .where(and(eq(projects.id, id), eq(projects.userId, userId)));
     return project ?? null;
   }
 
-  async findByCode(code: string) {
+  async findByCode(code: string, userId: string) {
     const [project] = await this.db.db
       .select()
       .from(projects)
-      .where(eq(projects.code, code));
+      .where(and(eq(projects.code, code), eq(projects.userId, userId)));
     return project ?? null;
   }
 
-  findChildren(parentId: string) {
+  findChildren(parentId: string, userId: string) {
     return this.db.db
       .select()
       .from(projects)
-      .where(eq(projects.parentId, parentId))
+      .where(and(eq(projects.parentId, parentId), eq(projects.userId, userId)))
       .orderBy(asc(projects.createdAt));
   }
 
@@ -71,11 +71,11 @@ export class ProjectsService {
       .orderBy(asc(todos.createdAt));
   }
 
-  async countTodos(projectId: string) {
+  async countTodos(projectId: string, userId: string) {
     const [result] = await this.db.db
       .select({ value: count() })
       .from(todos)
-      .where(eq(todos.projectId, projectId));
+      .where(and(eq(todos.projectId, projectId), eq(todos.userId, userId)));
     return result.value;
   }
 
@@ -95,7 +95,7 @@ export class ProjectsService {
       .orderBy(asc(attachments.createdAt));
   }
 
-  async update(id: string, dto: UpdateProjectDto) {
+  async update(id: string, dto: UpdateProjectDto, userId: string) {
     if (dto.parentId) {
       await this.assertNotOwnDescendant(id, dto.parentId);
     }
@@ -109,18 +109,18 @@ export class ProjectsService {
         parentId: dto.parentId,
         updatedAt: new Date(),
       })
-      .where(eq(projects.id, id))
+      .where(and(eq(projects.id, id), eq(projects.userId, userId)))
       .returning();
 
-    return updated;
+    return updated ?? null;
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     const [deleted] = await this.db.db
       .delete(projects)
-      .where(eq(projects.id, id))
+      .where(and(eq(projects.id, id), eq(projects.userId, userId)))
       .returning();
-    return deleted;
+    return deleted ?? null;
   }
 
   private async assertNotOwnDescendant(id: string, parentId: string) {

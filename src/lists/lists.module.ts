@@ -6,5 +6,6 @@ import { ListsResolver } from './lists.resolver';
 @Module({
   controllers: [ListsController],
   providers: [ListsService, ListsResolver],
+  exports: [ListsService],
 })
 export class ListsModule {}
