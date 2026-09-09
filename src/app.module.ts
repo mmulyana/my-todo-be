@@ -11,6 +11,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { TokensModule } from './tokens/tokens.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module';
     DbModule,
     AuthModule,
     UsersModule,
+    TokensModule,
     TodosModule,
     ListsModule,
     ProjectsModule,
@@ -33,4 +35,3 @@ import { UsersModule } from './users/users.module';
   providers: [AppService],
 })
 export class AppModule {}
-
