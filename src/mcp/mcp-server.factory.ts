@@ -3,6 +3,7 @@ import type { McpContext } from './mcp-context';
 import { registerTodoTools } from './tools/todos.tools';
 import { registerListTools } from './tools/lists.tools';
 import { registerProjectTools } from './tools/projects.tools';
+import { registerDocumentTools } from './tools/documents.tools';
 import { registerResources } from './resources';
 import { registerPrompts } from './prompts';
 
@@ -15,6 +16,7 @@ export function createMcpServer(ctx: McpContext) {
   registerTodoTools(server, ctx);
   registerListTools(server, ctx);
   registerProjectTools(server, ctx);
+  registerDocumentTools(server, ctx);
   registerResources(server, ctx);
   registerPrompts(server);
 

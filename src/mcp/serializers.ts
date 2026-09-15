@@ -1,4 +1,4 @@
-import type { Todo, List, Project } from '@/db/schema';
+import type { Todo, List, Project, Document } from '@/db/schema';
 
 // note: output tool MCP dibuat ringkas supaya nggak membuang context window dengan field internal dan data null yang nggak dibutuhkan AI.
 export function serializeTodo(
@@ -48,5 +48,16 @@ export function serializeProject(
     parentId: project.parentId,
     countTodo,
     completedTodos,
+  };
+}
+
+export function serializeDocument(document: Document, includeContent = false) {
+  return {
+    id: document.id,
+    title: document.title,
+    ...(includeContent ? { content: document.content } : {}),
+    projectId: document.projectId,
+    createdAt: document.createdAt,
+    updatedAt: document.updatedAt,
   };
 }

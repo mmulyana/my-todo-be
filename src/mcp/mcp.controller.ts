@@ -16,6 +16,7 @@ import { CurrentUser } from '@/auth/current-user.decorator';
 import { TodosService } from '@/todos/todos.service';
 import { ListsService } from '@/lists/lists.service';
 import { ProjectsService } from '@/projects/projects.service';
+import { DocumentsService } from '@/documents/documents.service';
 
 const STATELESS_NOTICE = {
   error:
@@ -29,6 +30,7 @@ export class McpController {
     private readonly todosService: TodosService,
     private readonly listsService: ListsService,
     private readonly projectsService: ProjectsService,
+    private readonly documentsService: DocumentsService,
   ) {}
 
   @Post()
@@ -45,6 +47,7 @@ export class McpController {
       todosService: this.todosService,
       listsService: this.listsService,
       projectsService: this.projectsService,
+      documentsService: this.documentsService,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
