@@ -7,11 +7,24 @@ import {
   timestamp,
   uuid,
   index,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 
 // ---------------------------------------------------------------------------
 // Enum
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Document content (ProseMirror / Tiptap JSON)
+// ---------------------------------------------------------------------------
+
+export type ProseMirrorDoc = {
+  type: string;
+  content?: ProseMirrorDoc[];
+  text?: string;
+  attrs?: Record<string, unknown>;
+  marks?: { type: string; attrs?: Record<string, unknown> }[];
+};
 
 export const attachmentTypeEnum = pgEnum('AttachmentType', [
   'IMAGE',
@@ -111,6 +124,27 @@ export const apiTokens = pgTable(
   (table) => [index('api_token_user_id_idx').on(table.userId)],
 );
 
+export const documents = pgTable(
+  'Document',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    content: jsonb('content').$type<ProseMirrorDoc | null>(),
+    createdAt: timestamp('createdAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    projectId: uuid('projectId'),
+    userId: uuid('userId'),
+  },
+  (table) => [
+    index('document_project_id_idx').on(table.projectId),
+    index('document_user_id_idx').on(table.userId),
+  ],
+);
+
 export const attachments = pgTable('Attachment', {
   id: uuid('id').primaryKey().defaultRandom(),
   filename: text('filename').notNull(),
@@ -118,6 +152,11 @@ export const attachments = pgTable('Attachment', {
   mimeType: text('mimeType'),
   size: integer('size'),
   type: attachmentTypeEnum('type').notNull().default('FILE'),
+  title: text('title'),
+  description: text('description'),
+  image: text('image'),
+  favicon: text('favicon'),
+  siteName: text('siteName'),
   createdAt: timestamp('createdAt', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -144,6 +183,9 @@ export type NewList = typeof lists.$inferInsert;
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
+
+export type Document = typeof documents.$inferSelect;
+export type NewDocument = typeof documents.$inferInsert;
 
 export type Attachment = typeof attachments.$inferSelect;
 export type NewAttachment = typeof attachments.$inferInsert;

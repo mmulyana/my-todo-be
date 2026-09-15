@@ -5,10 +5,14 @@ import { eq, and, asc } from 'drizzle-orm';
 import { CreateAttachmentDto } from './dto/create-attachment.dto';
 import { UpdateAttachmentDto } from './dto/update-attachment.dto';
 import { AttachmentType } from './models/attachment.model';
+import { LinksService } from '@/links/links.service';
 
 @Injectable()
 export class AttachmentsService {
-  constructor(private readonly db: DbService) {}
+  constructor(
+    private readonly db: DbService,
+    private readonly links: LinksService,
+  ) {}
 
   async create(userId: string, dto: CreateAttachmentDto) {
     if (dto.todoId) {
@@ -34,15 +38,24 @@ export class AttachmentsService {
     }
 
     const type = this.determineType(dto.type, dto.mimeType, dto.url);
+    const preview =
+      type === AttachmentType.LINK
+        ? await this.links.previewOrNull(dto.url)
+        : null;
 
     const [attachment] = await this.db.db
       .insert(attachments)
       .values({
-        filename: dto.filename,
+        filename: dto.filename || preview?.title || dto.url,
         url: dto.url,
         mimeType: dto.mimeType,
         size: dto.size,
         type: type as 'IMAGE' | 'FILE' | 'LINK',
+        title: preview?.title ?? null,
+        description: preview?.description ?? null,
+        image: preview?.image ?? null,
+        favicon: preview?.favicon ?? null,
+        siteName: preview?.siteName ?? null,
         todoId: dto.todoId ?? null,
         projectId: dto.projectId ?? null,
         userId,
@@ -133,9 +146,25 @@ export class AttachmentsService {
           )
         : attachment.type;
 
+    // note: refetch metadata only when the link itself changed.
+    const urlChanged = !!dto.url && dto.url !== attachment.url;
+    const preview =
+      type === AttachmentType.LINK && urlChanged
+        ? await this.links.previewOrNull(dto.url!)
+        : null;
+
     const [updated] = await this.db.db
       .update(attachments)
       .set({
+        ...(preview
+          ? {
+              title: preview.title,
+              description: preview.description,
+              image: preview.image,
+              favicon: preview.favicon,
+              siteName: preview.siteName,
+            }
+          : {}),
         filename: dto.filename,
         url: dto.url,
         mimeType: dto.mimeType,
