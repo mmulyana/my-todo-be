@@ -33,6 +33,22 @@ export class Attachment {
   @Field(() => AttachmentType)
   type: AttachmentType;
 
+  /** note: Link preview metadata, filled server-side when a LINK is saved. */
+  @Field(() => String, { nullable: true })
+  title?: string | null;
+
+  @Field(() => String, { nullable: true })
+  description?: string | null;
+
+  @Field(() => String, { nullable: true })
+  image?: string | null;
+
+  @Field(() => String, { nullable: true })
+  favicon?: string | null;
+
+  @Field(() => String, { nullable: true })
+  siteName?: string | null;
+
   @Field()
   createdAt: Date;
 

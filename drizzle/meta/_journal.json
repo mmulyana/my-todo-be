@@ -29,6 +29,20 @@
       "when": 1788959366937,
       "tag": "0003_chemical_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789401053880,
+      "tag": "0004_add_documents",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789482786698,
+      "tag": "0005_attachment_link_preview",
+      "breakpoints": true
     }
   ]
 }

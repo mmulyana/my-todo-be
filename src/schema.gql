@@ -10,6 +10,8 @@ type List {
   projectId: String
   project: Project
   todos: [Todo!]!
+  totalTodo: Int!
+  completedTodos: Int!
 }
 
 """
@@ -24,6 +26,11 @@ type Attachment {
   mimeType: String
   size: Int
   type: AttachmentType!
+  title: String
+  description: String
+  image: String
+  favicon: String
+  siteName: String
   createdAt: DateTime!
   updatedAt: DateTime!
   todoId: String
@@ -53,6 +60,7 @@ type Project {
   todos: [Todo!]!
   attachments: [Attachment!]!
   countTodo: Int!
+  completedTodos: Int!
 }
 
 type Todo {
@@ -69,11 +77,34 @@ type Todo {
   parent: Todo
   subtodos: [Todo!]!
   subtodoCount: Int!
+  completedTodos: Int!
   listId: String
   list: List
   projectId: String
   project: Project
   attachments: [Attachment!]!
+}
+
+type Document {
+  id: ID!
+  title: String!
+  content: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  projectId: String
+  project: Project
+}
+
+"""Arbitrary JSON value"""
+scalar JSON
+
+type LinkPreview {
+  url: String!
+  title: String!
+  description: String
+  image: String
+  favicon: String
+  siteName: String
 }
 
 type User {
@@ -99,6 +130,9 @@ type Query {
   projects: [Project!]!
   project(id: ID!): Project
   projectByCode(code: String!): Project
+  documents(projectId: ID): [Document!]!
+  document(id: ID!): Document
+  linkPreview(url: String!): LinkPreview!
   attachments(todoId: String, projectId: String): [Attachment!]!
   attachment(id: ID!): Attachment
 }
@@ -108,6 +142,7 @@ input TodoFilterInput {
   listId: String
   q: String
   projectId: String
+  completed: Boolean
 }
 
 """Built-in smart lists: TODAY, IMPORTANT, ALL"""
@@ -130,6 +165,9 @@ type Mutation {
   createProject(input: CreateProjectInput!): Project!
   updateProject(input: UpdateProjectInput!): Project!
   removeProject(id: ID!): Project!
+  createDocument(input: CreateDocumentInput!): Document!
+  updateDocument(input: UpdateDocumentInput!): Document!
+  removeDocument(id: ID!): Document!
   createAttachment(input: CreateAttachmentInput!): Attachment!
   updateAttachment(input: UpdateAttachmentInput!): Attachment!
   removeAttachment(id: ID!): Attachment!
@@ -194,6 +232,19 @@ input UpdateProjectInput {
   code: String
   description: String
   parentId: String
+}
+
+input CreateDocumentInput {
+  title: String!
+  content: JSON
+  projectId: String
+}
+
+input UpdateDocumentInput {
+  id: ID!
+  title: String
+  content: JSON
+  projectId: String
 }
 
 input CreateAttachmentInput {

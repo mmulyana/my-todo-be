@@ -8,6 +8,8 @@ import { DbModule } from './db/db.module';
 import { TodosModule } from './todos/todos.module';
 import { ListsModule } from './lists/lists.module';
 import { ProjectsModule } from './projects/projects.module';
+import { DocumentsModule } from './documents/documents.module';
+import { LinksModule } from './links/links.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -31,6 +33,8 @@ import { McpModule } from './mcp/mcp.module';
     TodosModule,
     ListsModule,
     ProjectsModule,
+    DocumentsModule,
+    LinksModule,
     AttachmentsModule,
   ],
   controllers: [AppController],
