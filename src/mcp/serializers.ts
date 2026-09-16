@@ -46,6 +46,7 @@ export function serializeProject(
     name: project.name,
     description: project.description,
     parentId: project.parentId,
+    archivedAt: project.archivedAt,
     countTodo,
     completedTodos,
   };

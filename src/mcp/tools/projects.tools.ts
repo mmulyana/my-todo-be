@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { McpContext } from '../mcp-context';
 import { serializeProject } from '../serializers';
@@ -9,11 +10,19 @@ export function registerProjectTools(server: McpServer, ctx: McpContext) {
     {
       title: 'List projects',
       description:
-        "List the user's projects, with progress counts. Use a project's name as projectName when calling create_todo/update_todo.",
-      inputSchema: {},
+        "List the user's projects, with progress counts. Archived projects are hidden unless includeArchived is true. Use a project's name as projectName when calling create_todo/update_todo.",
+      inputSchema: {
+        includeArchived: z
+          .boolean()
+          .optional()
+          .describe('Include archived projects (default false)'),
+      },
     },
-    async () => {
-      const projects = await ctx.projectsService.findAll(ctx.userId);
+    async ({ includeArchived }) => {
+      const projects = await ctx.projectsService.findAll(
+        ctx.userId,
+        includeArchived ?? false,
+      );
       const items = await Promise.all(
         projects.map(async (project) => {
           const [countTodo, completedTodos] = await Promise.all([
@@ -28,7 +37,9 @@ export function registerProjectTools(server: McpServer, ctx: McpContext) {
         ? items
             .map(
               (project) =>
-                `- ${project.name} (${project.completedTodos}/${project.countTodo})`,
+                `- ${project.name} (${project.completedTodos}/${project.countTodo})${
+                  project.archivedAt ? ' [archived]' : ''
+                }`,
             )
             .join('\n')
         : 'No projects yet.';

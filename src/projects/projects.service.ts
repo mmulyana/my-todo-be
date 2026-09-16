@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DbService } from '@/db/db.service';
 import { projects, lists, todos, attachments } from '@/db/schema';
-import { eq, isNull, and, asc, count } from 'drizzle-orm';
+import { eq, isNull, and, asc, count, inArray } from 'drizzle-orm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
@@ -23,11 +23,15 @@ export class ProjectsService {
     return project;
   }
 
-  findAll(userId: string) {
+  findAll(userId: string, includeArchived = false) {
     return this.db.db
       .select()
       .from(projects)
-      .where(eq(projects.userId, userId))
+      .where(
+        includeArchived
+          ? eq(projects.userId, userId)
+          : and(eq(projects.userId, userId), isNull(projects.archivedAt)),
+      )
       .orderBy(asc(projects.createdAt));
   }
 
@@ -47,11 +51,17 @@ export class ProjectsService {
     return project ?? null;
   }
 
-  findChildren(parentId: string, userId: string) {
+  findChildren(parentId: string, userId: string, includeArchived = false) {
     return this.db.db
       .select()
       .from(projects)
-      .where(and(eq(projects.parentId, parentId), eq(projects.userId, userId)))
+      .where(
+        and(
+          eq(projects.parentId, parentId),
+          eq(projects.userId, userId),
+          includeArchived ? undefined : isNull(projects.archivedAt),
+        ),
+      )
       .orderBy(asc(projects.createdAt));
   }
 
@@ -115,12 +125,60 @@ export class ProjectsService {
     return updated ?? null;
   }
 
+  archive(id: string, userId: string) {
+    return this.setArchivedAt(id, userId, new Date());
+  }
+
+  unarchive(id: string, userId: string) {
+    return this.setArchivedAt(id, userId, null);
+  }
+
   async remove(id: string, userId: string) {
     const [deleted] = await this.db.db
       .delete(projects)
       .where(and(eq(projects.id, id), eq(projects.userId, userId)))
       .returning();
     return deleted ?? null;
+  }
+
+  private async setArchivedAt(
+    id: string,
+    userId: string,
+    archivedAt: Date | null,
+  ) {
+    const project = await this.findOne(id, userId);
+    if (!project) return null;
+
+    const ids = await this.collectSubtreeIds(id, userId);
+
+    await this.db.db
+      .update(projects)
+      .set({ archivedAt, updatedAt: new Date() })
+      .where(and(inArray(projects.id, ids), eq(projects.userId, userId)));
+
+    return this.findOne(id, userId);
+  }
+
+  private async collectSubtreeIds(id: string, userId: string) {
+    const ids = [id];
+    let frontier = [id];
+
+    while (frontier.length > 0) {
+      const rows = await this.db.db
+        .select({ id: projects.id })
+        .from(projects)
+        .where(
+          and(
+            inArray(projects.parentId, frontier),
+            eq(projects.userId, userId),
+          ),
+        );
+
+      frontier = rows.map((row) => row.id).filter((id) => !ids.includes(id));
+      ids.push(...frontier);
+    }
+
+    return ids;
   }
 
   private async assertNotOwnDescendant(id: string, parentId: string) {

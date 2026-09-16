@@ -23,6 +23,9 @@ export class Project {
   @Field()
   updatedAt: Date;
 
+  @Field(() => Date, { nullable: true })
+  archivedAt?: Date | null;
+
   @Field(() => String, { nullable: true })
   parentId?: string | null;
 

@@ -60,6 +60,7 @@ export const projects = pgTable('Project', {
   updatedAt: timestamp('updatedAt', { withTimezone: true })
     .notNull()
     .defaultNow(),
+  archivedAt: timestamp('archivedAt', { withTimezone: true }),
   parentId: uuid('parentId'),
   userId: uuid('userId'),
 });

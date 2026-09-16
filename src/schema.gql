@@ -53,6 +53,7 @@ type Project {
   description: String
   createdAt: DateTime!
   updatedAt: DateTime!
+  archivedAt: DateTime
   parentId: String
   parent: Project
   children: [Project!]!
@@ -127,7 +128,7 @@ type Query {
   todo(id: ID!): Todo
   lists: [List!]!
   list(id: ID!): List
-  projects: [Project!]!
+  projects(includeArchived: Boolean): [Project!]!
   project(id: ID!): Project
   projectByCode(code: String!): Project
   documents(projectId: ID): [Document!]!
@@ -164,6 +165,8 @@ type Mutation {
   removeList(id: ID!): List!
   createProject(input: CreateProjectInput!): Project!
   updateProject(input: UpdateProjectInput!): Project!
+  archiveProject(id: ID!): Project!
+  unarchiveProject(id: ID!): Project!
   removeProject(id: ID!): Project!
   createDocument(input: CreateDocumentInput!): Document!
   updateDocument(input: UpdateDocumentInput!): Document!

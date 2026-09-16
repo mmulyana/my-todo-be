@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
@@ -28,8 +29,11 @@ export class ProjectsController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: { userId: string }) {
-    return this.projectsService.findAll(user.userId);
+  findAll(
+    @CurrentUser() user: { userId: string },
+    @Query('includeArchived') includeArchived?: string,
+  ) {
+    return this.projectsService.findAll(user.userId, includeArchived === 'true');
   }
 
   @Get(':id')
@@ -65,6 +69,16 @@ export class ProjectsController {
     @Body() updateProjectDto: UpdateProjectDto,
   ) {
     return this.projectsService.update(id, updateProjectDto, user.userId);
+  }
+
+  @Post(':id/archive')
+  archive(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.projectsService.archive(id, user.userId);
+  }
+
+  @Post(':id/unarchive')
+  unarchive(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
+    return this.projectsService.unarchive(id, user.userId);
   }
 
   @Delete(':id')

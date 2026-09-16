@@ -70,6 +70,18 @@ export class TodosService {
       }
     }
 
+    if (!filter.projectId) {
+      conditions.push(
+        or(
+          isNull(todos.projectId),
+          sql`${todos.projectId} NOT IN (
+            SELECT ${projects.id} FROM ${projects}
+            WHERE ${projects.userId} = ${userId} AND ${projects.archivedAt} IS NOT NULL
+          )`,
+        )!,
+      );
+    }
+
     if (filter.completed !== undefined && filter.completed !== null) {
       conditions.push(eq(todos.completed, filter.completed));
     }

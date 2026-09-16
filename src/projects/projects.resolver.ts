@@ -77,8 +77,12 @@ export class ProjectsResolver {
   }
 
   @Query(() => [Project], { name: 'projects' })
-  findAll(@CurrentUser() user: { userId: string }) {
-    return this.projectsService.findAll(user.userId);
+  findAll(
+    @CurrentUser() user: { userId: string },
+    @Args('includeArchived', { type: () => Boolean, nullable: true })
+    includeArchived?: boolean,
+  ) {
+    return this.projectsService.findAll(user.userId, includeArchived ?? false);
   }
 
   @Query(() => Project, { name: 'project', nullable: true })
@@ -103,6 +107,22 @@ export class ProjectsResolver {
     @CurrentUser() user: { userId: string },
   ) {
     return this.projectsService.update(input.id, input, user.userId);
+  }
+
+  @Mutation(() => Project)
+  archiveProject(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.archive(id, user.userId);
+  }
+
+  @Mutation(() => Project)
+  unarchiveProject(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.projectsService.unarchive(id, user.userId);
   }
 
   @Mutation(() => Project)
