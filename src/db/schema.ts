@@ -110,7 +110,7 @@ export const todos = pgTable(
     note: text('note').notNull().default(''),
     completed: boolean('completed').notNull().default(false),
     important: boolean('important').notNull().default(false),
-    priority: integer('priority').notNull().default(3),
+    priority: integer('priority').default(3),
     position: integer('position').notNull().default(0),
     listPosition: integer('listPosition').notNull().default(0),
     today: text('today'),

@@ -400,8 +400,8 @@ export class TodosService {
     }
   }
 
-  private assertPriority(priority: number | undefined) {
-    if (priority === undefined) return;
+  private assertPriority(priority: number | null | undefined) {
+    if (priority == null) return;
     if (![1, 2, 3].includes(priority)) {
       throw new BadRequestException('priority must be 1, 2, or 3');
     }

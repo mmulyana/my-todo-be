@@ -73,7 +73,7 @@ type Todo {
   note: String!
   completed: Boolean!
   important: Boolean!
-  priority: Int!
+  priority: Int
   kanbanColumnId: ID
   position: Int!
   listPosition: Int!

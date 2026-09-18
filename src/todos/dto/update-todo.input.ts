@@ -18,7 +18,7 @@ export class UpdateTodoInput {
   important?: boolean;
 
   @Field(() => Int, { nullable: true })
-  priority?: number;
+  priority?: number | null;
 
   @Field(() => String, { nullable: true })
   today?: string | null;
