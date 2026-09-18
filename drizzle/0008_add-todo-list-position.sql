@@ -1,0 +1,2 @@
+ALTER TABLE "Todo" ADD COLUMN "listPosition" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+CREATE INDEX "todo_user_project_list_position_idx" ON "Todo" USING btree ("userId","projectId","listId","listPosition");

@@ -14,6 +14,8 @@ import { Todo } from './models/todo.model';
 import { CreateTodoInput } from './dto/create-todo.input';
 import { UpdateTodoInput } from './dto/update-todo.input';
 import { TodoFilterInput } from './dto/todo-filter.input';
+import { MoveTodoInput } from './dto/move-todo.input';
+import { MoveTodoToListInput } from './dto/move-todo-to-list.input';
 import { List } from '@/lists/models/list.model';
 import { Project } from '@/projects/models/project.model';
 import { Attachment } from '@/attachments/models/attachment.model';
@@ -122,6 +124,32 @@ export class TodosResolver {
     @CurrentUser() user: { userId: string },
   ) {
     return this.todosService.update(input.id, input, user.userId);
+  }
+
+  @Mutation(() => Todo, { nullable: true })
+  moveTodo(
+    @Args('input') input: MoveTodoInput,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.todosService.move(
+      input.id,
+      input.kanbanColumnId,
+      input.position,
+      user.userId,
+    );
+  }
+
+  @Mutation(() => Todo, { nullable: true })
+  moveTodoToList(
+    @Args('input') input: MoveTodoToListInput,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.todosService.moveToList(
+      input.id,
+      input.listId ?? null,
+      input.position,
+      user.userId,
+    );
   }
 
   @Mutation(() => Todo)

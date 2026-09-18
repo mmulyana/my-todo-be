@@ -53,6 +53,7 @@ export const projects = pgTable('Project', {
   id: uuid('id').primaryKey().defaultRandom(),
   code: text('code').unique(),
   name: text('name').notNull(),
+  color: text('color'),
   description: text('description'),
   createdAt: timestamp('createdAt', { withTimezone: true })
     .notNull()
@@ -64,6 +65,29 @@ export const projects = pgTable('Project', {
   parentId: uuid('parentId'),
   userId: uuid('userId'),
 });
+
+export const kanbanColumns = pgTable(
+  'KanbanColumn',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    position: integer('position').notNull().default(0),
+    projectId: uuid('projectId').notNull(),
+    userId: uuid('userId').notNull(),
+    createdAt: timestamp('createdAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('kanban_column_project_position_idx').on(
+      table.projectId,
+      table.position,
+    ),
+  ],
+);
 
 export const lists = pgTable('List', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -86,6 +110,9 @@ export const todos = pgTable(
     note: text('note').notNull().default(''),
     completed: boolean('completed').notNull().default(false),
     important: boolean('important').notNull().default(false),
+    priority: integer('priority').notNull().default(3),
+    position: integer('position').notNull().default(0),
+    listPosition: integer('listPosition').notNull().default(0),
     today: text('today'),
     dueDate: text('dueDate'),
     createdAt: timestamp('createdAt', { withTimezone: true })
@@ -97,12 +124,24 @@ export const todos = pgTable(
     parentId: uuid('parentId'),
     listId: uuid('listId'),
     projectId: uuid('projectId'),
+    kanbanColumnId: uuid('kanbanColumnId'),
     userId: uuid('userId'),
   },
   (table) => [
     index('todo_parent_id_idx').on(table.parentId),
     index('todo_list_id_idx').on(table.listId),
     index('todo_project_id_idx').on(table.projectId),
+    index('todo_user_kanban_column_position_idx').on(
+      table.userId,
+      table.kanbanColumnId,
+      table.position,
+    ),
+    index('todo_user_project_list_position_idx').on(
+      table.userId,
+      table.projectId,
+      table.listId,
+      table.listPosition,
+    ),
   ],
 );
 
@@ -184,6 +223,8 @@ export type NewList = typeof lists.$inferInsert;
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
+export type KanbanColumn = typeof kanbanColumns.$inferSelect;
+export type NewKanbanColumn = typeof kanbanColumns.$inferInsert;
 
 export type Document = typeof documents.$inferSelect;
 export type NewDocument = typeof documents.$inferInsert;

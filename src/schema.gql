@@ -39,7 +39,9 @@ type Attachment {
   project: Project
 }
 
-"""Type of attachment: IMAGE, FILE, or LINK"""
+"""
+Type of attachment: IMAGE, FILE, or LINK
+"""
 enum AttachmentType {
   IMAGE
   FILE
@@ -49,6 +51,7 @@ enum AttachmentType {
 type Project {
   id: ID!
   name: String!
+  color: String
   code: String
   description: String
   createdAt: DateTime!
@@ -70,6 +73,10 @@ type Todo {
   note: String!
   completed: Boolean!
   important: Boolean!
+  priority: Int!
+  kanbanColumnId: ID
+  position: Int!
+  listPosition: Int!
   today: String
   dueDate: String
   createdAt: DateTime!
@@ -96,7 +103,9 @@ type Document {
   project: Project
 }
 
-"""Arbitrary JSON value"""
+"""
+Arbitrary JSON value
+"""
 scalar JSON
 
 type LinkPreview {
@@ -106,6 +115,13 @@ type LinkPreview {
   image: String
   favicon: String
   siteName: String
+}
+
+type KanbanColumn {
+  id: ID!
+  name: String!
+  position: Int!
+  projectId: String!
 }
 
 type User {
@@ -136,6 +152,7 @@ type Query {
   linkPreview(url: String!): LinkPreview!
   attachments(todoId: String, projectId: String): [Attachment!]!
   attachment(id: ID!): Attachment
+  kanbanColumns(projectId: ID!): [KanbanColumn!]!
 }
 
 input TodoFilterInput {
@@ -144,9 +161,12 @@ input TodoFilterInput {
   q: String
   projectId: String
   completed: Boolean
+  priority: Int
 }
 
-"""Built-in smart lists: TODAY, IMPORTANT, ALL"""
+"""
+Built-in smart lists: TODAY, IMPORTANT, ALL
+"""
 enum TodoView {
   TODAY
   IMPORTANT
@@ -159,6 +179,8 @@ type Mutation {
   refreshToken(token: String!): AuthPayload!
   createTodo(input: CreateTodoInput!): Todo!
   updateTodo(input: UpdateTodoInput!): Todo!
+  moveTodo(input: MoveTodoInput!): Todo
+  moveTodoToList(input: MoveTodoToListInput!): Todo
   removeTodo(id: ID!): Todo!
   createList(input: CreateListInput!): List!
   updateList(input: UpdateListInput!): List!
@@ -174,6 +196,9 @@ type Mutation {
   createAttachment(input: CreateAttachmentInput!): Attachment!
   updateAttachment(input: UpdateAttachmentInput!): Attachment!
   removeAttachment(id: ID!): Attachment!
+  createKanbanColumn(input: CreateKanbanColumnInput!): KanbanColumn!
+  updateKanbanColumn(input: UpdateKanbanColumnInput!): KanbanColumn!
+  removeKanbanColumn(id: ID!): KanbanColumn!
 }
 
 input RegisterInput {
@@ -191,6 +216,7 @@ input CreateTodoInput {
   title: String!
   note: String
   important: Boolean
+  priority: Int
   today: String
   dueDate: String
   parentId: String
@@ -204,11 +230,24 @@ input UpdateTodoInput {
   note: String
   completed: Boolean
   important: Boolean
+  priority: Int
   today: String
   dueDate: String
   parentId: String
   listId: String
   projectId: String
+}
+
+input MoveTodoInput {
+  id: ID!
+  kanbanColumnId: ID!
+  position: Int!
+}
+
+input MoveTodoToListInput {
+  id: ID!
+  listId: String
+  position: Int!
 }
 
 input CreateListInput {
@@ -224,6 +263,7 @@ input UpdateListInput {
 
 input CreateProjectInput {
   name: String!
+  color: String
   code: String
   description: String
   parentId: String
@@ -232,6 +272,7 @@ input CreateProjectInput {
 input UpdateProjectInput {
   id: ID!
   name: String
+  color: String
   code: String
   description: String
   parentId: String
@@ -269,4 +310,15 @@ input UpdateAttachmentInput {
   type: AttachmentType
   todoId: String
   projectId: String
+}
+
+input CreateKanbanColumnInput {
+  projectId: ID!
+  name: String!
+}
+
+input UpdateKanbanColumnInput {
+  id: ID!
+  name: String
+  position: Int
 }

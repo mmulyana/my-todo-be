@@ -12,6 +12,9 @@ export class Project {
   name: string;
 
   @Field(() => String, { nullable: true })
+  color?: string | null;
+
+  @Field(() => String, { nullable: true })
   code?: string | null;
 
   @Field(() => String, { nullable: true })

@@ -20,6 +20,18 @@ export class Todo {
   @Field()
   important: boolean;
 
+  @Field(() => Int)
+  priority: number;
+
+  @Field(() => ID, { nullable: true })
+  kanbanColumnId?: string | null;
+
+  @Field(() => Int)
+  position: number;
+
+  @Field(() => Int)
+  listPosition: number;
+
   @Field(() => String, { nullable: true })
   today?: string | null;
 

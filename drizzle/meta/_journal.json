@@ -50,6 +50,48 @@
       "when": 1789516566438,
       "tag": "0006_add_project_archive",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789659397853,
+      "tag": "0007_add-todo-kanban",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789661832366,
+      "tag": "0008_add-todo-list-position",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789665000000,
+      "tag": "0009_add-project-color",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789666000000,
+      "tag": "0010_add-kanban-columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789667000000,
+      "tag": "0011_add-todo-priority",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789738342564,
+      "tag": "0012_remove-todo-status",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ export class UpdateTodoDto {
   note?: string;
   completed?: boolean;
   important?: boolean;
+  priority?: number;
   today?: string | null;
   dueDate?: string | null;
   parentId?: string | null;

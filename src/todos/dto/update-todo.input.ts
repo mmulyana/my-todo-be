@@ -1,4 +1,4 @@
-import { InputType, Field, ID } from '@nestjs/graphql';
+import { InputType, Field, ID, Int } from '@nestjs/graphql';
 
 @InputType()
 export class UpdateTodoInput {
@@ -16,6 +16,9 @@ export class UpdateTodoInput {
 
   @Field({ nullable: true })
   important?: boolean;
+
+  @Field(() => Int, { nullable: true })
+  priority?: number;
 
   @Field(() => String, { nullable: true })
   today?: string | null;

@@ -1,6 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DbService } from '@/db/db.service';
-import { projects, lists, todos, attachments } from '@/db/schema';
+import {
+  projects,
+  lists,
+  todos,
+  attachments,
+  kanbanColumns,
+} from '@/db/schema';
 import { eq, isNull, and, asc, count, inArray } from 'drizzle-orm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -14,12 +20,18 @@ export class ProjectsService {
       .insert(projects)
       .values({
         name: dto.name,
+        color: dto.color,
         code: dto.code,
         description: dto.description,
         parentId: dto.parentId ?? null,
         userId,
       })
       .returning();
+    await this.db.db.insert(kanbanColumns).values([
+      { projectId: project.id, userId, name: 'Todo', position: 0 },
+      { projectId: project.id, userId, name: 'In Progress', position: 1 },
+      { projectId: project.id, userId, name: 'Done', position: 2 },
+    ]);
     return project;
   }
 
@@ -114,6 +126,7 @@ export class ProjectsService {
       .update(projects)
       .set({
         name: dto.name,
+        color: dto.color,
         code: dto.code,
         description: dto.description,
         parentId: dto.parentId,

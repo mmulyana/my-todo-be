@@ -1,0 +1,1 @@
+ALTER TABLE "Todo" ADD COLUMN "priority" integer DEFAULT 3 NOT NULL;

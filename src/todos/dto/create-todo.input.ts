@@ -1,4 +1,4 @@
-import { InputType, Field } from '@nestjs/graphql';
+import { InputType, Field, Int } from '@nestjs/graphql';
 
 @InputType()
 export class CreateTodoInput {
@@ -10,6 +10,9 @@ export class CreateTodoInput {
 
   @Field(() => Boolean, { nullable: true })
   important?: boolean;
+
+  @Field(() => Int, { nullable: true })
+  priority?: number;
 
   @Field(() => String, { nullable: true })
   today?: string | null;

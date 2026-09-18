@@ -1,4 +1,4 @@
-import { InputType, Field, registerEnumType } from '@nestjs/graphql';
+import { InputType, Field, Int, registerEnumType } from '@nestjs/graphql';
 
 export enum TodoView {
   TODAY = 'today',
@@ -27,4 +27,7 @@ export class TodoFilterInput {
 
   @Field(() => Boolean, { nullable: true })
   completed?: boolean;
+
+  @Field(() => Int, { nullable: true })
+  priority?: number;
 }

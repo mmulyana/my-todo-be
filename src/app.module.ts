@@ -11,6 +11,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { DocumentsModule } from './documents/documents.module';
 import { LinksModule } from './links/links.module';
 import { AttachmentsModule } from './attachments/attachments.module';
+import { KanbanColumnsModule } from './kanban-columns/kanban-columns.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TokensModule } from './tokens/tokens.module';
@@ -36,6 +37,7 @@ import { McpModule } from './mcp/mcp.module';
     DocumentsModule,
     LinksModule,
     AttachmentsModule,
+    KanbanColumnsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
