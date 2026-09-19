@@ -99,6 +99,13 @@
       "when": 1789930000000,
       "tag": "0013_make-todo-priority-optional",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789930000001,
+      "tag": "0014_remove-todo-priority-default",
+      "breakpoints": true
     }
   ]
 }

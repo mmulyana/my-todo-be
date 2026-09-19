@@ -35,7 +35,7 @@ export class TodosService {
         title: dto.title,
         note: dto.note ?? '',
         important: dto.important ?? false,
-        priority: dto.priority ?? 3,
+        priority: dto.priority ?? null,
         today: dto.today ?? null,
         dueDate: dto.dueDate ?? null,
         parentId: dto.parentId ?? null,
