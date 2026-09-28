@@ -8,4 +8,5 @@ export class CreateTodoDto {
   parentId?: string | null;
   listId?: string | null;
   projectId?: string | null;
+  milestoneId?: string | null;
 }

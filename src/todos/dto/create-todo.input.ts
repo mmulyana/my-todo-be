@@ -28,4 +28,7 @@ export class CreateTodoInput {
 
   @Field(() => String, { nullable: true })
   projectId?: string | null;
+
+  @Field(() => String, { nullable: true })
+  milestoneId?: string | null;
 }

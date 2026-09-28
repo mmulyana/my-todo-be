@@ -17,6 +17,7 @@ import { TodoFilterInput } from './dto/todo-filter.input';
 import { MoveTodoInput } from './dto/move-todo.input';
 import { MoveTodoToListInput } from './dto/move-todo-to-list.input';
 import { List } from '@/lists/models/list.model';
+import { Milestone } from '@/milestones/models/milestone.model';
 import { Project } from '@/projects/models/project.model';
 import { Attachment } from '@/attachments/models/attachment.model';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
@@ -91,6 +92,14 @@ export class TodosResolver {
       return null;
     }
     return this.todosService.findProject(todo.projectId, user.userId);
+  }
+
+  @ResolveField(() => Milestone, { nullable: true })
+  milestone(@Parent() todo: Todo, @CurrentUser() user: { userId: string }) {
+    if (!todo.milestoneId) {
+      return null;
+    }
+    return this.todosService.findMilestone(todo.milestoneId, user.userId);
   }
 
   @Query(() => [Todo], { name: 'todos' })

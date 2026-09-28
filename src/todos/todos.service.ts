@@ -4,6 +4,7 @@ import {
   todos,
   lists,
   projects,
+  milestones,
   attachments,
   kanbanColumns,
 } from '@/db/schema';
@@ -40,6 +41,7 @@ export class TodosService {
         dueDate: dto.dueDate ?? null,
         parentId: dto.parentId ?? null,
         listId: dto.listId ?? null,
+        milestoneId: dto.milestoneId ?? null,
         projectId,
         kanbanColumnId,
         userId,
@@ -81,6 +83,10 @@ export class TodosService {
 
       if (filter.listId) {
         conditions.push(eq(todos.listId, filter.listId));
+      }
+
+      if (filter.milestoneId) {
+        conditions.push(eq(todos.milestoneId, filter.milestoneId));
       }
 
       if (filter.projectId) {
@@ -167,6 +173,16 @@ export class TodosService {
     return list ?? null;
   }
 
+  async findMilestone(milestoneId: string, userId: string) {
+    const [milestone] = await this.db.db
+      .select()
+      .from(milestones)
+      .where(
+        and(eq(milestones.id, milestoneId), eq(milestones.userId, userId)),
+      );
+    return milestone ?? null;
+  }
+
   async findProject(projectId: string, userId: string) {
     const [project] = await this.db.db
       .select()
@@ -225,6 +241,7 @@ export class TodosService {
         dueDate: dto.dueDate,
         parentId: dto.parentId,
         listId: dto.listId,
+        milestoneId: dto.milestoneId,
         projectId: dto.projectId,
         ...kanbanPlacement,
         updatedAt: new Date(),

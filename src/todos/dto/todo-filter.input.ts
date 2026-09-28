@@ -20,6 +20,9 @@ export class TodoFilterInput {
   listId?: string;
 
   @Field(() => String, { nullable: true })
+  milestoneId?: string;
+
+  @Field(() => String, { nullable: true })
   q?: string;
 
   @Field(() => String, { nullable: true })

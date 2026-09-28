@@ -39,9 +39,7 @@ type Attachment {
   project: Project
 }
 
-"""
-Type of attachment: IMAGE, FILE, or LINK
-"""
+"""Type of attachment: IMAGE, FILE, or LINK"""
 enum AttachmentType {
   IMAGE
   FILE
@@ -64,6 +62,21 @@ type Project {
   todos: [Todo!]!
   attachments: [Attachment!]!
   countTodo: Int!
+  completedTodos: Int!
+}
+
+type Milestone {
+  id: ID!
+  name: String!
+  description: String
+  dueDate: String
+  position: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  projectId: String
+  project: Project
+  todos: [Todo!]!
+  totalTodo: Int!
   completedTodos: Int!
 }
 
@@ -90,6 +103,8 @@ type Todo {
   list: List
   projectId: String
   project: Project
+  milestoneId: String
+  milestone: Milestone
   attachments: [Attachment!]!
 }
 
@@ -103,9 +118,7 @@ type Document {
   project: Project
 }
 
-"""
-Arbitrary JSON value
-"""
+"""Arbitrary JSON value"""
 scalar JSON
 
 type LinkPreview {
@@ -153,20 +166,21 @@ type Query {
   attachments(todoId: String, projectId: String): [Attachment!]!
   attachment(id: ID!): Attachment
   kanbanColumns(projectId: ID!): [KanbanColumn!]!
+  milestones(projectId: ID): [Milestone!]!
+  milestone(id: ID!): Milestone
 }
 
 input TodoFilterInput {
   view: TodoView
   listId: String
+  milestoneId: String
   q: String
   projectId: String
   completed: Boolean
   priority: Int
 }
 
-"""
-Built-in smart lists: TODAY, IMPORTANT, ALL
-"""
+"""Built-in smart lists: TODAY, IMPORTANT, ALL"""
 enum TodoView {
   TODAY
   IMPORTANT
@@ -199,6 +213,9 @@ type Mutation {
   createKanbanColumn(input: CreateKanbanColumnInput!): KanbanColumn!
   updateKanbanColumn(input: UpdateKanbanColumnInput!): KanbanColumn!
   removeKanbanColumn(id: ID!): KanbanColumn!
+  createMilestone(input: CreateMilestoneInput!): Milestone!
+  updateMilestone(input: UpdateMilestoneInput!): Milestone!
+  removeMilestone(id: ID!): Milestone!
 }
 
 input RegisterInput {
@@ -222,6 +239,7 @@ input CreateTodoInput {
   parentId: String
   listId: String
   projectId: String
+  milestoneId: String
 }
 
 input UpdateTodoInput {
@@ -236,6 +254,7 @@ input UpdateTodoInput {
   parentId: String
   listId: String
   projectId: String
+  milestoneId: String
 }
 
 input MoveTodoInput {
@@ -321,4 +340,19 @@ input UpdateKanbanColumnInput {
   id: ID!
   name: String
   position: Int
+}
+
+input CreateMilestoneInput {
+  name: String!
+  description: String
+  dueDate: String
+  projectId: String
+}
+
+input UpdateMilestoneInput {
+  id: ID!
+  name: String
+  description: String
+  dueDate: String
+  projectId: String
 }

@@ -102,6 +102,28 @@ export const lists = pgTable('List', {
   userId: uuid('userId'),
 });
 
+export const milestones = pgTable(
+  'Milestone',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    description: text('description'),
+    dueDate: text('dueDate'),
+    position: integer('position').notNull().default(0),
+    createdAt: timestamp('createdAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    projectId: uuid('projectId'),
+    userId: uuid('userId'),
+  },
+  (table) => [
+    index('milestone_project_position_idx').on(table.projectId, table.position),
+  ],
+);
+
 export const todos = pgTable(
   'Todo',
   {
@@ -125,12 +147,14 @@ export const todos = pgTable(
     listId: uuid('listId'),
     projectId: uuid('projectId'),
     kanbanColumnId: uuid('kanbanColumnId'),
+    milestoneId: uuid('milestoneId'),
     userId: uuid('userId'),
   },
   (table) => [
     index('todo_parent_id_idx').on(table.parentId),
     index('todo_list_id_idx').on(table.listId),
     index('todo_project_id_idx').on(table.projectId),
+    index('todo_milestone_id_idx').on(table.milestoneId),
     index('todo_user_kanban_column_position_idx').on(
       table.userId,
       table.kanbanColumnId,
@@ -220,6 +244,9 @@ export type NewTodo = typeof todos.$inferInsert;
 
 export type List = typeof lists.$inferSelect;
 export type NewList = typeof lists.$inferInsert;
+
+export type Milestone = typeof milestones.$inferSelect;
+export type NewMilestone = typeof milestones.$inferInsert;
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
