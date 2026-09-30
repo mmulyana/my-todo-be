@@ -58,7 +58,12 @@ export class TodosService {
   }
 
   async findAll(userId: string, filter: TodoFilterInput = {}) {
-    const conditions = [isNull(todos.parentId), eq(todos.userId, userId)];
+    const includeSubtodos =
+      filter.includeSubtodos === true &&
+      filter.view === TodoView.TODAY &&
+      !filter.q;
+    const conditions = [eq(todos.userId, userId)];
+    if (!includeSubtodos) conditions.push(isNull(todos.parentId));
 
     if (filter.q) {
       // Full-text search overrides other view filters

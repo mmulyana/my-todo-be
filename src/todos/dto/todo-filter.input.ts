@@ -33,4 +33,10 @@ export class TodoFilterInput {
 
   @Field(() => Int, { nullable: true })
   priority?: number;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: 'Also return child todos. Only applies to the TODAY view.',
+  })
+  includeSubtodos?: boolean;
 }
