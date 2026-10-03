@@ -151,6 +151,22 @@ type TimeEntry {
   updatedAt: DateTime!
 }
 
+type CalendarEvent {
+  id: ID!
+  title: String!
+  description: String!
+  startAt: DateTime!
+
+  """Exclusive end time"""
+  endAt: DateTime!
+  allDay: Boolean!
+  color: String
+  todoId: String
+  todo: Todo
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type User {
   id: ID!
   email: String!
@@ -184,6 +200,9 @@ type Query {
   milestone(id: ID!): Milestone
   timeEntries(from: DateTime, to: DateTime): [TimeEntry!]!
   runningTimeEntry: TimeEntry
+
+  """Events overlapping the [from, to) range"""
+  calendarEvents(from: DateTime, to: DateTime): [CalendarEvent!]!
 }
 
 input TodoFilterInput {
@@ -194,6 +213,14 @@ input TodoFilterInput {
   projectId: String
   completed: Boolean
   priority: Int
+
+  """
+  Only todos due on or after this YYYY-MM-DD date. Subtodos are included once a due range is set.
+  """
+  dueFrom: String
+
+  """Only todos due on or before this YYYY-MM-DD date."""
+  dueTo: String
 
   """Also return child todos. Only applies to the TODAY view."""
   includeSubtodos: Boolean
@@ -242,6 +269,9 @@ type Mutation {
   stopTimeEntry: TimeEntry
   updateTimeEntry(input: UpdateTimeEntryInput!): TimeEntry
   removeTimeEntry(id: ID!): TimeEntry
+  createCalendarEvent(input: CreateCalendarEventInput!): CalendarEvent!
+  updateCalendarEvent(input: UpdateCalendarEventInput!): CalendarEvent
+  removeCalendarEvent(id: ID!): CalendarEvent
 }
 
 input RegisterInput {
@@ -394,4 +424,26 @@ input UpdateTimeEntryInput {
   description: String
   startedAt: DateTime
   endedAt: DateTime
+}
+
+input CreateCalendarEventInput {
+  """Defaults to the linked todo title"""
+  title: String
+  description: String
+  startAt: DateTime!
+  endAt: DateTime!
+  allDay: Boolean
+  color: String
+  todoId: String
+}
+
+input UpdateCalendarEventInput {
+  id: ID!
+  title: String
+  description: String
+  startAt: DateTime
+  endAt: DateTime
+  allDay: Boolean
+  color: String
+  todoId: String
 }

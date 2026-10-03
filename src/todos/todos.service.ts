@@ -8,7 +8,18 @@ import {
   attachments,
   kanbanColumns,
 } from '@/db/schema';
-import { eq, isNull, isNotNull, ilike, or, and, asc, sql } from 'drizzle-orm';
+import {
+  eq,
+  isNull,
+  isNotNull,
+  ilike,
+  or,
+  and,
+  asc,
+  gte,
+  lte,
+  sql,
+} from 'drizzle-orm';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodoFilterInput, TodoView } from './dto/todo-filter.input';
@@ -62,8 +73,19 @@ export class TodosService {
       filter.includeSubtodos === true &&
       filter.view === TodoView.TODAY &&
       !filter.q;
+    const hasDueRange = Boolean(filter.dueFrom || filter.dueTo);
     const conditions = [eq(todos.userId, userId)];
-    if (!includeSubtodos) conditions.push(isNull(todos.parentId));
+    // note: a due range is a calendar lookup, a subtodo deadline matters as much as its parent's
+    if (!includeSubtodos && !hasDueRange) {
+      conditions.push(isNull(todos.parentId));
+    }
+
+    if (hasDueRange) {
+      this.assertDate(filter.dueFrom, 'dueFrom');
+      this.assertDate(filter.dueTo, 'dueTo');
+      if (filter.dueFrom) conditions.push(gte(todos.dueDate, filter.dueFrom));
+      if (filter.dueTo) conditions.push(lte(todos.dueDate, filter.dueTo));
+    }
 
     if (filter.q) {
       // Full-text search overrides other view filters

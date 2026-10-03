@@ -192,6 +192,32 @@ export const timeEntries = pgTable(
   ],
 );
 
+export const calendarEvents = pgTable(
+  'CalendarEvent',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    description: text('description').notNull().default(''),
+    startAt: timestamp('startAt', { withTimezone: true }).notNull(),
+    // note: exclusive end, a one-day all-day event ends at the next midnight
+    endAt: timestamp('endAt', { withTimezone: true }).notNull(),
+    allDay: boolean('allDay').notNull().default(false),
+    color: text('color'),
+    todoId: uuid('todoId'),
+    userId: uuid('userId').notNull(),
+    createdAt: timestamp('createdAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('calendar_event_user_start_at_idx').on(table.userId, table.startAt),
+    index('calendar_event_todo_id_idx').on(table.todoId),
+  ],
+);
+
 export const apiTokens = pgTable(
   'ApiToken',
   {
@@ -284,6 +310,9 @@ export type NewAttachment = typeof attachments.$inferInsert;
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type NewTimeEntry = typeof timeEntries.$inferInsert;
+
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type NewCalendarEvent = typeof calendarEvents.$inferInsert;
 
 export type ApiToken = typeof apiTokens.$inferSelect;
 export type NewApiToken = typeof apiTokens.$inferInsert;

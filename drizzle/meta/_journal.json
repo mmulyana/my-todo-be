@@ -127,6 +127,13 @@
       "when": 1791006519518,
       "tag": "0017_add-time-entries",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791030803465,
+      "tag": "0018_add-calendar-events",
+      "breakpoints": true
     }
   ]
 }

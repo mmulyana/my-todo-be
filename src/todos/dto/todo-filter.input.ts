@@ -34,6 +34,19 @@ export class TodoFilterInput {
   @Field(() => Int, { nullable: true })
   priority?: number;
 
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'Only todos due on or after this YYYY-MM-DD date. Subtodos are included once a due range is set.',
+  })
+  dueFrom?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Only todos due on or before this YYYY-MM-DD date.',
+  })
+  dueTo?: string;
+
   @Field(() => Boolean, {
     nullable: true,
     description: 'Also return child todos. Only applies to the TODAY view.',
