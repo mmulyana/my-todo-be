@@ -13,6 +13,7 @@ import { LinksModule } from './links/links.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { KanbanColumnsModule } from './kanban-columns/kanban-columns.module';
 import { MilestonesModule } from './milestones/milestones.module';
+import { TimeEntriesModule } from './time-entries/time-entries.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TokensModule } from './tokens/tokens.module';
@@ -40,6 +41,7 @@ import { McpModule } from './mcp/mcp.module';
     AttachmentsModule,
     KanbanColumnsModule,
     MilestonesModule,
+    TimeEntriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

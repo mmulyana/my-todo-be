@@ -119,11 +119,16 @@ export class TodosService {
       conditions.push(eq(todos.priority, filter.priority));
     }
 
-    return this.db.db
+    const query = this.db.db
       .select()
       .from(todos)
       .where(and(...conditions))
       .orderBy(asc(todos.createdAt));
+
+    if (filter.limit !== undefined && filter.limit !== null) {
+      return query.limit(Math.min(Math.max(filter.limit, 1), 100));
+    }
+    return query;
   }
 
   findSubtodos(parentId: string, userId: string) {

@@ -137,6 +137,20 @@ type KanbanColumn {
   projectId: String!
 }
 
+type TimeEntry {
+  id: ID!
+  description: String!
+  startedAt: DateTime!
+  endedAt: DateTime
+  todoId: String
+  todo: Todo
+
+  """Duration in seconds, counted up to now while still running"""
+  duration: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type User {
   id: ID!
   email: String!
@@ -168,6 +182,8 @@ type Query {
   kanbanColumns(projectId: ID!): [KanbanColumn!]!
   milestones(projectId: ID): [Milestone!]!
   milestone(id: ID!): Milestone
+  timeEntries(from: DateTime, to: DateTime): [TimeEntry!]!
+  runningTimeEntry: TimeEntry
 }
 
 input TodoFilterInput {
@@ -178,6 +194,12 @@ input TodoFilterInput {
   projectId: String
   completed: Boolean
   priority: Int
+
+  """Also return child todos. Only applies to the TODAY view."""
+  includeSubtodos: Boolean
+
+  """Max number of todos to return (1-100)."""
+  limit: Int
 }
 
 """Built-in smart lists: TODAY, IMPORTANT, ALL"""
@@ -216,6 +238,10 @@ type Mutation {
   createMilestone(input: CreateMilestoneInput!): Milestone!
   updateMilestone(input: UpdateMilestoneInput!): Milestone!
   removeMilestone(id: ID!): Milestone!
+  startTimeEntry(input: StartTimeEntryInput): TimeEntry!
+  stopTimeEntry: TimeEntry
+  updateTimeEntry(input: UpdateTimeEntryInput!): TimeEntry
+  removeTimeEntry(id: ID!): TimeEntry
 }
 
 input RegisterInput {
@@ -355,4 +381,17 @@ input UpdateMilestoneInput {
   description: String
   dueDate: String
   projectId: String
+}
+
+input StartTimeEntryInput {
+  todoId: String
+  description: String
+}
+
+input UpdateTimeEntryInput {
+  id: ID!
+  todoId: String
+  description: String
+  startedAt: DateTime
+  endedAt: DateTime
 }

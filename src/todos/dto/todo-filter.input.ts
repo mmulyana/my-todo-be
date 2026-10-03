@@ -39,4 +39,10 @@ export class TodoFilterInput {
     description: 'Also return child todos. Only applies to the TODAY view.',
   })
   includeSubtodos?: boolean;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Max number of todos to return (1-100).',
+  })
+  limit?: number;
 }

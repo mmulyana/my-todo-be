@@ -169,6 +169,29 @@ export const todos = pgTable(
   ],
 );
 
+export const timeEntries = pgTable(
+  'TimeEntry',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    description: text('description').notNull().default(''),
+    startedAt: timestamp('startedAt', { withTimezone: true }).notNull(),
+    // note: null means the timer is still running, max one per user
+    endedAt: timestamp('endedAt', { withTimezone: true }),
+    todoId: uuid('todoId'),
+    userId: uuid('userId').notNull(),
+    createdAt: timestamp('createdAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('time_entry_user_started_at_idx').on(table.userId, table.startedAt),
+    index('time_entry_todo_id_idx').on(table.todoId),
+  ],
+);
+
 export const apiTokens = pgTable(
   'ApiToken',
   {
@@ -258,6 +281,9 @@ export type NewDocument = typeof documents.$inferInsert;
 
 export type Attachment = typeof attachments.$inferSelect;
 export type NewAttachment = typeof attachments.$inferInsert;
+
+export type TimeEntry = typeof timeEntries.$inferSelect;
+export type NewTimeEntry = typeof timeEntries.$inferInsert;
 
 export type ApiToken = typeof apiTokens.$inferSelect;
 export type NewApiToken = typeof apiTokens.$inferInsert;

@@ -120,6 +120,13 @@
       "when": 1790612449792,
       "tag": "0016_add_milestone_description",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791006519518,
+      "tag": "0017_add-time-entries",
+      "breakpoints": true
     }
   ]
 }
