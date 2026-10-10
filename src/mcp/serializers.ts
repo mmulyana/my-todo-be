@@ -1,9 +1,22 @@
-import type { Todo, List, Project, Document } from '@/db/schema';
+import type {
+  Todo,
+  List,
+  Project,
+  Document,
+  Milestone,
+  KanbanColumn,
+  Attachment,
+  CalendarEvent,
+} from '@/db/schema';
 
-// note: output tool MCP dibuat ringkas supaya nggak membuang context window dengan field internal dan data null yang nggak dibutuhkan AI.
+// note: output dibuat ringkas biar nggak buang context window AI dengan field internal/null
 export function serializeTodo(
   todo: Todo,
-  names?: { listName?: string | null; projectName?: string | null },
+  names?: {
+    listName?: string | null;
+    projectName?: string | null;
+    milestoneName?: string | null;
+  },
 ) {
   return {
     id: todo.id,
@@ -18,6 +31,9 @@ export function serializeTodo(
     listName: names?.listName ?? undefined,
     projectId: todo.projectId,
     projectName: names?.projectName ?? undefined,
+    milestoneId: todo.milestoneId,
+    milestoneName: names?.milestoneName ?? undefined,
+    kanbanColumnId: todo.kanbanColumnId,
   };
 }
 
@@ -60,5 +76,58 @@ export function serializeDocument(document: Document, includeContent = false) {
     projectId: document.projectId,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
+  };
+}
+
+export function serializeMilestone(
+  milestone: Milestone,
+  countTodo?: number,
+  completedTodos?: number,
+) {
+  return {
+    id: milestone.id,
+    name: milestone.name,
+    description: milestone.description || undefined,
+    dueDate: milestone.dueDate,
+    projectId: milestone.projectId,
+    countTodo,
+    completedTodos,
+  };
+}
+
+export function serializeKanbanColumn(column: KanbanColumn) {
+  return {
+    id: column.id,
+    name: column.name,
+    position: column.position,
+    projectId: column.projectId,
+  };
+}
+
+export function serializeAttachment(attachment: Attachment) {
+  return {
+    id: attachment.id,
+    type: attachment.type,
+    filename: attachment.filename,
+    url: attachment.url,
+    title: attachment.title || undefined,
+    description: attachment.description || undefined,
+    siteName: attachment.siteName || undefined,
+    todoId: attachment.todoId,
+    projectId: attachment.projectId,
+    createdAt: attachment.createdAt,
+  };
+}
+
+export function serializeCalendarEvent(event: CalendarEvent) {
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description || undefined,
+    startAt: event.startAt,
+    endAt: event.endAt,
+    allDay: event.allDay,
+    color: event.color,
+    todoId: event.todoId,
   };
 }

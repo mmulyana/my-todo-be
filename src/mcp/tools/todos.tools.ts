@@ -3,7 +3,11 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { McpContext } from '../mcp-context';
 import { serializeTodo } from '../serializers';
 import { textResult, errorResult } from '../result-helpers';
-import { resolveListId, resolveProjectId } from '../name-resolvers';
+import {
+  resolveListId,
+  resolveMilestoneId,
+  resolveProjectId,
+} from '../name-resolvers';
 import { TodoView } from '@/todos/dto/todo-filter.input';
 
 const DEFAULT_LIST_LIMIT = 25;
@@ -30,6 +34,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .describe('Built-in smart list'),
         listId: z.string().optional().describe('Filter by list id'),
         projectId: z.string().optional().describe('Filter by project id'),
+        milestoneId: z.string().optional().describe('Filter by milestone id'),
         q: z
           .string()
           .optional()
@@ -49,22 +54,27 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           ),
       },
     },
-    async ({ view, listId, projectId, q, completed, limit }) => {
+    async ({ view, listId, projectId, milestoneId, q, completed, limit }) => {
       const todos = await ctx.todosService.findAll(ctx.userId, {
         view: view as TodoView | undefined,
         listId,
         projectId,
+        milestoneId,
         q,
         completed,
       });
 
-      const [lists, projects] = await Promise.all([
+      const [lists, projects, milestones] = await Promise.all([
         ctx.listsService.findAll(ctx.userId),
         ctx.projectsService.findAll(ctx.userId),
+        ctx.milestonesService.findAll(ctx.userId),
       ]);
       const listNames = new Map(lists.map((list) => [list.id, list.name]));
       const projectNames = new Map(
         projects.map((project) => [project.id, project.name]),
+      );
+      const milestoneNames = new Map(
+        milestones.map((milestone) => [milestone.id, milestone.name]),
       );
 
       const clamp = Math.min(limit ?? DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT);
@@ -73,6 +83,9 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           listName: todo.listId ? listNames.get(todo.listId) : undefined,
           projectName: todo.projectId
             ? projectNames.get(todo.projectId)
+            : undefined,
+          milestoneName: todo.milestoneId
+            ? milestoneNames.get(todo.milestoneId)
             : undefined,
         }),
       );
@@ -107,19 +120,26 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
         return errorResult(`Todo ${id} tidak ditemukan`);
       }
 
-      const [list, project, subtodoCount, completedTodos] = await Promise.all([
-        todo.listId ? ctx.todosService.findList(todo.listId, ctx.userId) : null,
-        todo.projectId
-          ? ctx.todosService.findProject(todo.projectId, ctx.userId)
-          : null,
-        ctx.todosService.countSubtodos(id, ctx.userId),
-        ctx.todosService.countCompletedSubtodos(id, ctx.userId),
-      ]);
+      const [list, project, milestone, subtodoCount, completedTodos] =
+        await Promise.all([
+          todo.listId
+            ? ctx.todosService.findList(todo.listId, ctx.userId)
+            : null,
+          todo.projectId
+            ? ctx.todosService.findProject(todo.projectId, ctx.userId)
+            : null,
+          todo.milestoneId
+            ? ctx.todosService.findMilestone(todo.milestoneId, ctx.userId)
+            : null,
+          ctx.todosService.countSubtodos(id, ctx.userId),
+          ctx.todosService.countCompletedSubtodos(id, ctx.userId),
+        ]);
 
       const result: Record<string, unknown> = {
         ...serializeTodo(todo, {
           listName: list?.name,
           projectName: project?.name,
+          milestoneName: milestone?.name,
         }),
         subtodoCount,
         completedTodos,
@@ -142,7 +162,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
     {
       title: 'Create todo',
       description:
-        "Create a new todo, or a subtodo when parentId is given. Pass listName/projectName (not ids) to file it under an existing list or project - resolved by exact, case-insensitive name match against the user's own lists/projects.",
+        "Create a new todo, or a subtodo when parentId is given. Pass listName/projectName/milestoneName (not ids) to file it under an existing list, project or milestone - resolved by exact, case-insensitive name match against the user's own data. milestoneName is looked up within projectName when both are given.",
       inputSchema: {
         title: z.string().min(1),
         note: z.string().optional(),
@@ -161,6 +181,10 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .string()
           .optional()
           .describe('Exact name of an existing project'),
+        milestoneName: z
+          .string()
+          .optional()
+          .describe('Exact name of an existing milestone'),
       },
       annotations: { destructiveHint: false },
     },
@@ -173,11 +197,18 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       parentId,
       listName,
       projectName,
+      milestoneName,
     }) => {
       const list = await resolveListId(ctx, listName);
       if (list.error) return errorResult(list.error);
       const project = await resolveProjectId(ctx, projectName);
       if (project.error) return errorResult(project.error);
+      const milestone = await resolveMilestoneId(
+        ctx,
+        milestoneName,
+        project.id,
+      );
+      if (milestone.error) return errorResult(milestone.error);
 
       try {
         const todo = await ctx.todosService.create(ctx.userId, {
@@ -189,6 +220,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           parentId,
           listId: list.id,
           projectId: project.id,
+          milestoneId: milestone.id,
         });
         return textResult(
           `Created "${todo.title}" (${todo.id})`,
@@ -226,6 +258,13 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .string()
           .optional()
           .describe('Exact name of an existing project to move this to'),
+        milestoneName: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            'Exact name of an existing milestone to assign, or null to unassign',
+          ),
       },
       annotations: { idempotentHint: true },
     },
@@ -239,11 +278,18 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       parentId,
       listName,
       projectName,
+      milestoneName,
     }) => {
       const list = await resolveListId(ctx, listName);
       if (list.error) return errorResult(list.error);
       const project = await resolveProjectId(ctx, projectName);
       if (project.error) return errorResult(project.error);
+      const milestone = await resolveMilestoneId(
+        ctx,
+        milestoneName,
+        project.id,
+      );
+      if (milestone.error) return errorResult(milestone.error);
 
       try {
         const updated = await ctx.todosService.update(
@@ -257,6 +303,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
             parentId,
             listId: list.id,
             projectId: project.id,
+            milestoneId: milestone.id,
           },
           ctx.userId,
         );

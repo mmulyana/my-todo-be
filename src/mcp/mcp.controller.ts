@@ -17,6 +17,10 @@ import { TodosService } from '@/todos/todos.service';
 import { ListsService } from '@/lists/lists.service';
 import { ProjectsService } from '@/projects/projects.service';
 import { DocumentsService } from '@/documents/documents.service';
+import { MilestonesService } from '@/milestones/milestones.service';
+import { KanbanColumnsService } from '@/kanban-columns/kanban-columns.service';
+import { AttachmentsService } from '@/attachments/attachments.service';
+import { CalendarEventsService } from '@/calendar-events/calendar-events.service';
 
 const STATELESS_NOTICE = {
   error:
@@ -31,6 +35,10 @@ export class McpController {
     private readonly listsService: ListsService,
     private readonly projectsService: ProjectsService,
     private readonly documentsService: DocumentsService,
+    private readonly milestonesService: MilestonesService,
+    private readonly kanbanColumnsService: KanbanColumnsService,
+    private readonly attachmentsService: AttachmentsService,
+    private readonly calendarEventsService: CalendarEventsService,
   ) {}
 
   @Post()
@@ -39,15 +47,17 @@ export class McpController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    // note: stateless server dan transport baru dibuat untuk setiap request, lalu
-    // dihentikan setelah response selesai. Karena tidak ada session, tidak perlu
-    // sticky session meskipun berjalan di beberapa instance
+    // note: tanpa session, jadi nggak butuh sticky session walau jalan di banyak instance
     const server = createMcpServer({
       userId: user.userId,
       todosService: this.todosService,
       listsService: this.listsService,
       projectsService: this.projectsService,
       documentsService: this.documentsService,
+      milestonesService: this.milestonesService,
+      kanbanColumnsService: this.kanbanColumnsService,
+      attachmentsService: this.attachmentsService,
+      calendarEventsService: this.calendarEventsService,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -62,7 +72,7 @@ export class McpController {
     await transport.handleRequest(req, res, req.body);
   }
 
-  // note: get dan delete hanya relevan pada mode stateful tapi tetep ada respons eksplisitnya
+  // note: get/delete cuma relevan di mode stateful, tetap dijawab 405 biar client dapat pesan jelas
   @Get()
   @HttpCode(405)
   handleGet() {
