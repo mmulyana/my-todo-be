@@ -23,6 +23,7 @@ import {
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodoFilterInput, TodoView } from './dto/todo-filter.input';
+import { normalizeRepoUrl } from '@/common/repo-url';
 
 const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -40,6 +41,7 @@ export class TodosService {
 
     const projectId = dto.projectId ?? null;
     const kanbanColumnId = await this.firstColumnId(projectId, userId);
+    const repo = await this.resolveRepo(dto.repo, projectId, userId);
 
     const [todo] = await this.db.db
       .insert(todos)
@@ -54,6 +56,7 @@ export class TodosService {
         listId: dto.listId ?? null,
         milestoneId: dto.milestoneId ?? null,
         assignee: this.normalizeAssignee(dto.assignee),
+        repo: repo ?? null,
         projectId,
         kanbanColumnId,
         userId,
@@ -255,6 +258,15 @@ export class TodosService {
     const existing = await this.findOne(id, userId);
     if (!existing) return null;
 
+    const nextProjectId =
+      dto.projectId === undefined ? existing.projectId : dto.projectId;
+    // note: repo milik project lama otomatis dilepas saat todo pindah project
+    const projectChanged = nextProjectId !== existing.projectId;
+    const repo =
+      dto.repo === undefined && projectChanged
+        ? null
+        : await this.resolveRepo(dto.repo, nextProjectId, userId);
+
     let kanbanPlacement: {
       kanbanColumnId?: string | null;
       position?: number;
@@ -285,6 +297,7 @@ export class TodosService {
           dto.assignee === undefined
             ? undefined
             : this.normalizeAssignee(dto.assignee),
+        repo,
         projectId: dto.projectId,
         ...kanbanPlacement,
         updatedAt: new Date(),
@@ -458,6 +471,29 @@ export class TodosService {
     if (value && !DATE_FORMAT.test(value)) {
       throw new BadRequestException(`${field} harus format 'yyyy-mm-dd'`);
     }
+  }
+
+  // note: undefined = tidak diubah, null/'' = dikosongkan, selain itu wajib salah satu repo project
+  private async resolveRepo(
+    raw: string | null | undefined,
+    projectId: string | null,
+    userId: string,
+  ) {
+    if (raw === undefined) return undefined;
+    if (raw === null || !raw.trim()) return null;
+    const url = normalizeRepoUrl(raw);
+    const project = projectId
+      ? await this.findProject(projectId, userId)
+      : null;
+    if (!project) {
+      throw new BadRequestException('Todo tanpa project tidak bisa punya repo');
+    }
+    if (!project.repos.includes(url)) {
+      throw new BadRequestException(
+        `Repo ${url} tidak terdaftar di project "${project.name}"`,
+      );
+    }
+    return url;
   }
 
   // note: string kosong disamakan dengan null biar "manual" cuma punya satu representasi

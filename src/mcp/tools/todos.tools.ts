@@ -7,6 +7,7 @@ import {
   resolveListId,
   resolveMilestoneId,
   resolveProjectId,
+  resolveRepo,
 } from '../name-resolvers';
 import { TodoView } from '@/todos/dto/todo-filter.input';
 
@@ -221,6 +222,12 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .string()
           .optional()
           .describe("Who may pick this up, e.g. 'agent'. Omit for manual work"),
+        repo: z
+          .string()
+          .optional()
+          .describe(
+            "Repo the agent works in: a repo name like 'my-todo-be' or its URL, from the project's repos",
+          ),
       },
       annotations: { destructiveHint: false },
     },
@@ -235,6 +242,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       projectName,
       milestoneName,
       assignee,
+      repo,
     }) => {
       const list = await resolveListId(ctx, listName);
       if (list.error) return errorResult(list.error);
@@ -246,6 +254,8 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
         project.id,
       );
       if (milestone.error) return errorResult(milestone.error);
+      const repoUrl = await resolveRepo(ctx, repo, project.id);
+      if (repoUrl.error) return errorResult(repoUrl.error);
 
       try {
         const todo = await ctx.todosService.create(ctx.userId, {
@@ -259,6 +269,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           projectId: project.id,
           milestoneId: milestone.id,
           assignee,
+          repo: repoUrl.url,
         });
         return textResult(
           `Created "${todo.title}" (${todo.id})`,
@@ -310,6 +321,13 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .describe(
             "Who may pick this up, e.g. 'agent', or null for manual work",
           ),
+        repo: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            "Repo the agent works in (name like 'my-todo-be' or URL, from the project's repos), or null to clear",
+          ),
       },
       annotations: { idempotentHint: true },
     },
@@ -325,6 +343,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       projectName,
       milestoneName,
       assignee,
+      repo,
     }) => {
       const list = await resolveListId(ctx, listName);
       if (list.error) return errorResult(list.error);
@@ -336,6 +355,16 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
         project.id,
       );
       if (milestone.error) return errorResult(milestone.error);
+      const existing =
+        repo && !project.id
+          ? await ctx.todosService.findOne(id, ctx.userId)
+          : null;
+      const repoUrl = await resolveRepo(
+        ctx,
+        repo,
+        project.id ?? existing?.projectId,
+      );
+      if (repoUrl.error) return errorResult(repoUrl.error);
 
       try {
         const updated = await ctx.todosService.update(
@@ -351,6 +380,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
             projectId: project.id,
             milestoneId: milestone.id,
             assignee,
+            repo: repoUrl.url,
           },
           ctx.userId,
         );

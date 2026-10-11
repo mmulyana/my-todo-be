@@ -81,6 +81,9 @@ export class Todo {
   @Field(() => String, { nullable: true })
   assignee?: string | null;
 
+  @Field(() => String, { nullable: true })
+  repo?: string | null;
+
   @Field(() => [Attachment])
   attachments?: Attachment[];
 }

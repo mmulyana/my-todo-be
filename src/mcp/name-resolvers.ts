@@ -1,4 +1,5 @@
 import type { McpContext } from './mcp-context';
+import { repoName } from '@/common/repo-url';
 
 // note: tool MCP pakai nama, bukan UUID; dicocokkan persis (case-insensitive) hanya di data milik user
 type Resolved = { id?: string; error?: string };
@@ -60,4 +61,28 @@ export async function resolveMilestoneId(
     };
   }
   return { id: matches[0].id };
+}
+
+// note: agent/Claude biasanya menyebut nama repo ("my-todo-be"), jadi nama dicocokkan ke URL di project.repos
+export async function resolveRepo(
+  ctx: McpContext,
+  repo: string | null | undefined,
+  projectId: string | null | undefined,
+): Promise<{ url?: string | null; error?: string }> {
+  if (repo === undefined || repo === null) return { url: repo };
+  if (repo.startsWith('https://')) return { url: repo };
+  const project = projectId
+    ? await ctx.projectsService.findOne(projectId, ctx.userId)
+    : null;
+  const match = project?.repos.find(
+    (url) => repoName(url).toLowerCase() === repo.toLowerCase(),
+  );
+  if (!match) {
+    return {
+      error: `Repo "${repo}" tidak ada di project. Pilihan: ${
+        project?.repos.map(repoName).join(', ') || '(project belum punya repo)'
+      }`,
+    };
+  }
+  return { url: match };
 }

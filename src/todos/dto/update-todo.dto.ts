@@ -11,4 +11,5 @@ export class UpdateTodoDto {
   projectId?: string | null;
   milestoneId?: string | null;
   assignee?: string | null;
+  repo?: string | null;
 }

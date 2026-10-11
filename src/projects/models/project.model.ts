@@ -29,6 +29,9 @@ export class Project {
   @Field(() => Date, { nullable: true })
   archivedAt?: Date | null;
 
+  @Field(() => [String])
+  repos: string[];
+
   @Field(() => String, { nullable: true })
   parentId?: string | null;
 

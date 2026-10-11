@@ -19,4 +19,7 @@ export class UpdateProjectInput {
 
   @Field(() => String, { nullable: true })
   parentId?: string | null;
+
+  @Field(() => [String], { nullable: true })
+  repos?: string[];
 }

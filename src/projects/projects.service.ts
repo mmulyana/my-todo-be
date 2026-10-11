@@ -10,6 +10,7 @@ import {
 import { eq, isNull, and, asc, count, inArray } from 'drizzle-orm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { normalizeRepoList } from '@/common/repo-url';
 
 @Injectable()
 export class ProjectsService {
@@ -23,6 +24,7 @@ export class ProjectsService {
         color: dto.color,
         code: dto.code,
         description: dto.description,
+        repos: normalizeRepoList(dto.repos ?? []),
         parentId: dto.parentId ?? null,
         userId,
       })
@@ -129,6 +131,8 @@ export class ProjectsService {
         color: dto.color,
         code: dto.code,
         description: dto.description,
+        repos:
+          dto.repos === undefined ? undefined : normalizeRepoList(dto.repos),
         parentId: dto.parentId,
         updatedAt: new Date(),
       })

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   pgTable,
   pgEnum,
@@ -62,6 +63,11 @@ export const projects = pgTable('Project', {
     .notNull()
     .defaultNow(),
   archivedAt: timestamp('archivedAt', { withTimezone: true }),
+  // note: repo kerja project (URL kanonik), sengaja dipisah dari attachment biar agent nggak nebak dari link biasa
+  repos: text('repos')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   parentId: uuid('parentId'),
   userId: uuid('userId'),
 });
@@ -150,6 +156,8 @@ export const todos = pgTable(
     milestoneId: uuid('milestoneId'),
     // note: null = dikerjakan manual, selain itu nama agent yang boleh mengambilnya
     assignee: text('assignee'),
+    // note: null = pakai satu-satunya repo project; kalau diisi wajib salah satu dari project.repos
+    repo: text('repo'),
     userId: uuid('userId'),
   },
   (table) => [

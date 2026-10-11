@@ -55,6 +55,7 @@ type Project {
   createdAt: DateTime!
   updatedAt: DateTime!
   archivedAt: DateTime
+  repos: [String!]!
   parentId: String
   parent: Project
   children: [Project!]!
@@ -106,6 +107,7 @@ type Todo {
   milestoneId: String
   milestone: Milestone
   assignee: String
+  repo: String
   attachments: [Attachment!]!
 }
 
@@ -299,6 +301,7 @@ input CreateTodoInput {
   projectId: String
   milestoneId: String
   assignee: String
+  repo: String
 }
 
 input UpdateTodoInput {
@@ -315,6 +318,7 @@ input UpdateTodoInput {
   projectId: String
   milestoneId: String
   assignee: String
+  repo: String
 }
 
 input MoveTodoInput {
@@ -346,6 +350,7 @@ input CreateProjectInput {
   code: String
   description: String
   parentId: String
+  repos: [String!]
 }
 
 input UpdateProjectInput {
@@ -355,6 +360,7 @@ input UpdateProjectInput {
   code: String
   description: String
   parentId: String
+  repos: [String!]
 }
 
 input CreateDocumentInput {

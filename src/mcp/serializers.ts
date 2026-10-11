@@ -37,6 +37,7 @@ export function serializeTodo(
     kanbanColumnId: todo.kanbanColumnId,
     kanbanColumnName: names?.kanbanColumnName ?? undefined,
     assignee: todo.assignee,
+    repo: todo.repo,
   };
 }
 
@@ -64,6 +65,7 @@ export function serializeProject(
     code: project.code,
     name: project.name,
     description: project.description,
+    repos: project.repos,
     parentId: project.parentId,
     archivedAt: project.archivedAt,
     countTodo,

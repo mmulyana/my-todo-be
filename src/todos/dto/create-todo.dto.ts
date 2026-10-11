@@ -10,4 +10,5 @@ export class CreateTodoDto {
   projectId?: string | null;
   milestoneId?: string | null;
   assignee?: string | null;
+  repo?: string | null;
 }

@@ -34,4 +34,7 @@ export class CreateTodoInput {
 
   @Field(() => String, { nullable: true })
   assignee?: string | null;
+
+  @Field(() => String, { nullable: true })
+  repo?: string | null;
 }
