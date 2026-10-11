@@ -148,6 +148,8 @@ export const todos = pgTable(
     projectId: uuid('projectId'),
     kanbanColumnId: uuid('kanbanColumnId'),
     milestoneId: uuid('milestoneId'),
+    // note: null = dikerjakan manual, selain itu nama agent yang boleh mengambilnya
+    assignee: text('assignee'),
     userId: uuid('userId'),
   },
   (table) => [
@@ -155,6 +157,7 @@ export const todos = pgTable(
     index('todo_list_id_idx').on(table.listId),
     index('todo_project_id_idx').on(table.projectId),
     index('todo_milestone_id_idx').on(table.milestoneId),
+    index('todo_user_assignee_idx').on(table.userId, table.assignee),
     index('todo_user_kanban_column_position_idx').on(
       table.userId,
       table.kanbanColumnId,

@@ -37,6 +37,7 @@ export class TodosController {
     @Query('q') q?: string,
     @Query('projectId') projectId?: string,
     @Query('completed') completed?: string,
+    @Query('assignee') assignee?: string,
   ) {
     const filter: TodoFilterInput = {
       view,
@@ -44,6 +45,7 @@ export class TodosController {
       q,
       projectId,
       completed: completed === undefined ? undefined : completed === 'true',
+      assignee,
     };
     return this.todosService.findAll(user.userId, filter);
   }

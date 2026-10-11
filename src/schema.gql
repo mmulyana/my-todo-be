@@ -105,6 +105,7 @@ type Todo {
   project: Project
   milestoneId: String
   milestone: Milestone
+  assignee: String
   attachments: [Attachment!]!
 }
 
@@ -192,23 +193,24 @@ type Query {
   projectByCode(code: String!): Project
   documents(projectId: ID): [Document!]!
   document(id: ID!): Document
-  linkPreview(url: String!): LinkPreview!
-  attachments(todoId: String, projectId: String): [Attachment!]!
-  attachment(id: ID!): Attachment
-  kanbanColumns(projectId: ID!): [KanbanColumn!]!
   milestones(projectId: ID): [Milestone!]!
   milestone(id: ID!): Milestone
-  timeEntries(from: DateTime, to: DateTime): [TimeEntry!]!
-  runningTimeEntry: TimeEntry
+  kanbanColumns(projectId: ID!): [KanbanColumn!]!
+  attachments(todoId: String, projectId: String): [Attachment!]!
+  attachment(id: ID!): Attachment
+  linkPreview(url: String!): LinkPreview!
 
   """Events overlapping the [from, to) range"""
   calendarEvents(from: DateTime, to: DateTime): [CalendarEvent!]!
+  timeEntries(from: DateTime, to: DateTime): [TimeEntry!]!
+  runningTimeEntry: TimeEntry
 }
 
 input TodoFilterInput {
   view: TodoView
   listId: String
   milestoneId: String
+  assignee: String
   q: String
   projectId: String
   completed: Boolean
@@ -256,22 +258,22 @@ type Mutation {
   createDocument(input: CreateDocumentInput!): Document!
   updateDocument(input: UpdateDocumentInput!): Document!
   removeDocument(id: ID!): Document!
-  createAttachment(input: CreateAttachmentInput!): Attachment!
-  updateAttachment(input: UpdateAttachmentInput!): Attachment!
-  removeAttachment(id: ID!): Attachment!
-  createKanbanColumn(input: CreateKanbanColumnInput!): KanbanColumn!
-  updateKanbanColumn(input: UpdateKanbanColumnInput!): KanbanColumn!
-  removeKanbanColumn(id: ID!): KanbanColumn!
   createMilestone(input: CreateMilestoneInput!): Milestone!
   updateMilestone(input: UpdateMilestoneInput!): Milestone!
   removeMilestone(id: ID!): Milestone!
+  createKanbanColumn(input: CreateKanbanColumnInput!): KanbanColumn!
+  updateKanbanColumn(input: UpdateKanbanColumnInput!): KanbanColumn!
+  removeKanbanColumn(id: ID!): KanbanColumn!
+  createAttachment(input: CreateAttachmentInput!): Attachment!
+  updateAttachment(input: UpdateAttachmentInput!): Attachment!
+  removeAttachment(id: ID!): Attachment!
+  createCalendarEvent(input: CreateCalendarEventInput!): CalendarEvent!
+  updateCalendarEvent(input: UpdateCalendarEventInput!): CalendarEvent
+  removeCalendarEvent(id: ID!): CalendarEvent
   startTimeEntry(input: StartTimeEntryInput): TimeEntry!
   stopTimeEntry: TimeEntry
   updateTimeEntry(input: UpdateTimeEntryInput!): TimeEntry
   removeTimeEntry(id: ID!): TimeEntry
-  createCalendarEvent(input: CreateCalendarEventInput!): CalendarEvent!
-  updateCalendarEvent(input: UpdateCalendarEventInput!): CalendarEvent
-  removeCalendarEvent(id: ID!): CalendarEvent
 }
 
 input RegisterInput {
@@ -296,6 +298,7 @@ input CreateTodoInput {
   listId: String
   projectId: String
   milestoneId: String
+  assignee: String
 }
 
 input UpdateTodoInput {
@@ -311,6 +314,7 @@ input UpdateTodoInput {
   listId: String
   projectId: String
   milestoneId: String
+  assignee: String
 }
 
 input MoveTodoInput {
@@ -366,6 +370,32 @@ input UpdateDocumentInput {
   projectId: String
 }
 
+input CreateMilestoneInput {
+  name: String!
+  description: String
+  dueDate: String
+  projectId: String
+}
+
+input UpdateMilestoneInput {
+  id: ID!
+  name: String
+  description: String
+  dueDate: String
+  projectId: String
+}
+
+input CreateKanbanColumnInput {
+  projectId: ID!
+  name: String!
+}
+
+input UpdateKanbanColumnInput {
+  id: ID!
+  name: String
+  position: Int
+}
+
 input CreateAttachmentInput {
   filename: String!
   url: String!
@@ -385,45 +415,6 @@ input UpdateAttachmentInput {
   type: AttachmentType
   todoId: String
   projectId: String
-}
-
-input CreateKanbanColumnInput {
-  projectId: ID!
-  name: String!
-}
-
-input UpdateKanbanColumnInput {
-  id: ID!
-  name: String
-  position: Int
-}
-
-input CreateMilestoneInput {
-  name: String!
-  description: String
-  dueDate: String
-  projectId: String
-}
-
-input UpdateMilestoneInput {
-  id: ID!
-  name: String
-  description: String
-  dueDate: String
-  projectId: String
-}
-
-input StartTimeEntryInput {
-  todoId: String
-  description: String
-}
-
-input UpdateTimeEntryInput {
-  id: ID!
-  todoId: String
-  description: String
-  startedAt: DateTime
-  endedAt: DateTime
 }
 
 input CreateCalendarEventInput {
@@ -446,4 +437,17 @@ input UpdateCalendarEventInput {
   allDay: Boolean
   color: String
   todoId: String
+}
+
+input StartTimeEntryInput {
+  todoId: String
+  description: String
+}
+
+input UpdateTimeEntryInput {
+  id: ID!
+  todoId: String
+  description: String
+  startedAt: DateTime
+  endedAt: DateTime
 }

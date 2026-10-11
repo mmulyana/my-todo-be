@@ -78,6 +78,9 @@ export class Todo {
   @Field(() => Milestone, { nullable: true })
   milestone?: Milestone | null;
 
+  @Field(() => String, { nullable: true })
+  assignee?: string | null;
+
   @Field(() => [Attachment])
   attachments?: Attachment[];
 }

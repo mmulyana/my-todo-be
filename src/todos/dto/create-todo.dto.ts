@@ -9,4 +9,5 @@ export class CreateTodoDto {
   listId?: string | null;
   projectId?: string | null;
   milestoneId?: string | null;
+  assignee?: string | null;
 }

@@ -53,6 +53,7 @@ export class TodosService {
         parentId: dto.parentId ?? null,
         listId: dto.listId ?? null,
         milestoneId: dto.milestoneId ?? null,
+        assignee: this.normalizeAssignee(dto.assignee),
         projectId,
         kanbanColumnId,
         userId,
@@ -130,6 +131,12 @@ export class TodosService {
             WHERE ${projects.userId} = ${userId} AND ${projects.archivedAt} IS NOT NULL
           )`,
         )!,
+      );
+    }
+
+    if (filter.assignee) {
+      conditions.push(
+        eq(todos.assignee, this.normalizeAssignee(filter.assignee)!),
       );
     }
 
@@ -274,6 +281,10 @@ export class TodosService {
         parentId: dto.parentId,
         listId: dto.listId,
         milestoneId: dto.milestoneId,
+        assignee:
+          dto.assignee === undefined
+            ? undefined
+            : this.normalizeAssignee(dto.assignee),
         projectId: dto.projectId,
         ...kanbanPlacement,
         updatedAt: new Date(),
@@ -447,6 +458,12 @@ export class TodosService {
     if (value && !DATE_FORMAT.test(value)) {
       throw new BadRequestException(`${field} harus format 'yyyy-mm-dd'`);
     }
+  }
+
+  // note: string kosong disamakan dengan null biar "manual" cuma punya satu representasi
+  private normalizeAssignee(value: string | null | undefined) {
+    const normalized = value?.trim().toLowerCase();
+    return normalized ? normalized : null;
   }
 
   private assertPriority(priority: number | null | undefined) {

@@ -35,6 +35,10 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
         listId: z.string().optional().describe('Filter by list id'),
         projectId: z.string().optional().describe('Filter by project id'),
         milestoneId: z.string().optional().describe('Filter by milestone id'),
+        assignee: z
+          .string()
+          .optional()
+          .describe("Filter by assignee, e.g. 'agent'"),
         q: z
           .string()
           .optional()
@@ -54,12 +58,22 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           ),
       },
     },
-    async ({ view, listId, projectId, milestoneId, q, completed, limit }) => {
+    async ({
+      view,
+      listId,
+      projectId,
+      milestoneId,
+      assignee,
+      q,
+      completed,
+      limit,
+    }) => {
       const todos = await ctx.todosService.findAll(ctx.userId, {
         view: view as TodoView | undefined,
         listId,
         projectId,
         milestoneId,
+        assignee,
         q,
         completed,
       });
@@ -76,6 +90,21 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       const milestoneNames = new Map(
         milestones.map((milestone) => [milestone.id, milestone.name]),
       );
+      const projectIds = [
+        ...new Set(
+          todos.flatMap((todo) => (todo.projectId ? [todo.projectId] : [])),
+        ),
+      ];
+      const columns = (
+        await Promise.all(
+          projectIds.map((id) =>
+            ctx.kanbanColumnsService.findAll(id, ctx.userId),
+          ),
+        )
+      ).flat();
+      const columnNames = new Map(
+        columns.map((column) => [column.id, column.name]),
+      );
 
       const clamp = Math.min(limit ?? DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT);
       const items = todos.slice(0, clamp).map((todo) =>
@@ -86,6 +115,9 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
             : undefined,
           milestoneName: todo.milestoneId
             ? milestoneNames.get(todo.milestoneId)
+            : undefined,
+          kanbanColumnName: todo.kanbanColumnId
+            ? columnNames.get(todo.kanbanColumnId)
             : undefined,
         }),
       );
@@ -185,6 +217,10 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .string()
           .optional()
           .describe('Exact name of an existing milestone'),
+        assignee: z
+          .string()
+          .optional()
+          .describe("Who may pick this up, e.g. 'agent'. Omit for manual work"),
       },
       annotations: { destructiveHint: false },
     },
@@ -198,6 +234,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       listName,
       projectName,
       milestoneName,
+      assignee,
     }) => {
       const list = await resolveListId(ctx, listName);
       if (list.error) return errorResult(list.error);
@@ -221,6 +258,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           listId: list.id,
           projectId: project.id,
           milestoneId: milestone.id,
+          assignee,
         });
         return textResult(
           `Created "${todo.title}" (${todo.id})`,
@@ -265,6 +303,13 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
           .describe(
             'Exact name of an existing milestone to assign, or null to unassign',
           ),
+        assignee: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            "Who may pick this up, e.g. 'agent', or null for manual work",
+          ),
       },
       annotations: { idempotentHint: true },
     },
@@ -279,6 +324,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       listName,
       projectName,
       milestoneName,
+      assignee,
     }) => {
       const list = await resolveListId(ctx, listName);
       if (list.error) return errorResult(list.error);
@@ -304,6 +350,7 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
             listId: list.id,
             projectId: project.id,
             milestoneId: milestone.id,
+            assignee,
           },
           ctx.userId,
         );

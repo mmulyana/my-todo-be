@@ -16,6 +16,7 @@ export function serializeTodo(
     listName?: string | null;
     projectName?: string | null;
     milestoneName?: string | null;
+    kanbanColumnName?: string | null;
   },
 ) {
   return {
@@ -34,6 +35,8 @@ export function serializeTodo(
     milestoneId: todo.milestoneId,
     milestoneName: names?.milestoneName ?? undefined,
     kanbanColumnId: todo.kanbanColumnId,
+    kanbanColumnName: names?.kanbanColumnName ?? undefined,
+    assignee: todo.assignee,
   };
 }
 

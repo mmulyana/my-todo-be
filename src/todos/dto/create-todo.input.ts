@@ -31,4 +31,7 @@ export class CreateTodoInput {
 
   @Field(() => String, { nullable: true })
   milestoneId?: string | null;
+
+  @Field(() => String, { nullable: true })
+  assignee?: string | null;
 }

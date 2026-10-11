@@ -23,6 +23,9 @@ export class TodoFilterInput {
   milestoneId?: string;
 
   @Field(() => String, { nullable: true })
+  assignee?: string;
+
+  @Field(() => String, { nullable: true })
   q?: string;
 
   @Field(() => String, { nullable: true })

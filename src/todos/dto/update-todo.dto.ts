@@ -10,4 +10,5 @@ export class UpdateTodoDto {
   listId?: string | null;
   projectId?: string | null;
   milestoneId?: string | null;
+  assignee?: string | null;
 }
