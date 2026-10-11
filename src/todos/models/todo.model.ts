@@ -3,6 +3,8 @@ import { Project } from '@/projects/models/project.model';
 import { List } from '@/lists/models/list.model';
 import { Milestone } from '@/milestones/models/milestone.model';
 import { Attachment } from '@/attachments/models/attachment.model';
+import { GraphQLJSON } from '@/common/scalars/json.scalar';
+import type { ProseMirrorDoc } from '@/db/schema';
 
 @ObjectType()
 export class Todo {
@@ -14,6 +16,9 @@ export class Todo {
 
   @Field()
   note: string;
+
+  @Field(() => GraphQLJSON, { nullable: true })
+  noteJson?: ProseMirrorDoc | null;
 
   @Field()
   completed: boolean;

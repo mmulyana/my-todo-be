@@ -7,6 +7,7 @@ import {
   milestones,
   attachments,
   kanbanColumns,
+  type ProseMirrorDoc,
 } from '@/db/schema';
 import {
   eq,
@@ -16,6 +17,7 @@ import {
   or,
   and,
   asc,
+  inArray,
   gte,
   lte,
   sql,
@@ -24,6 +26,12 @@ import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodoFilterInput, TodoView } from './dto/todo-filter.input';
 import { normalizeRepoUrl } from '@/common/repo-url';
+import {
+  attachmentIds,
+  docToMarkdown,
+  markdownToDoc,
+  type AttachmentRef,
+} from '@/common/note-markdown';
 
 const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -42,12 +50,14 @@ export class TodosService {
     const projectId = dto.projectId ?? null;
     const kanbanColumnId = await this.firstColumnId(projectId, userId);
     const repo = await this.resolveRepo(dto.repo, projectId, userId);
+    const noteFields = await this.resolveNote(dto);
 
     const [todo] = await this.db.db
       .insert(todos)
       .values({
         title: dto.title,
-        note: dto.note ?? '',
+        note: noteFields.note ?? '',
+        noteJson: noteFields.noteJson ?? null,
         important: dto.important ?? false,
         priority: dto.priority ?? null,
         today: dto.today ?? null,
@@ -92,7 +102,7 @@ export class TodosService {
     }
 
     if (filter.q) {
-      // Full-text search overrides other view filters
+      // note: pencarian teks mengabaikan filter view/list/project/milestone
       conditions.push(
         or(
           ilike(todos.title, `%${filter.q}%`),
@@ -280,11 +290,13 @@ export class TodosService {
       };
     }
 
+    const noteFields = await this.resolveNote(dto, id);
+
     const [updated] = await this.db.db
       .update(todos)
       .set({
         title: dto.title,
-        note: dto.note,
+        ...noteFields,
         completed: dto.completed,
         important: dto.important,
         priority: dto.priority,
@@ -465,6 +477,39 @@ export class TodosService {
         .where(and(eq(todos.id, id), eq(todos.userId, userId)));
       return moved ?? null;
     });
+  }
+
+  // note: noteJson menang kalau dikirim bersama note; selain itu salah satunya diturunkan dari yang lain
+  private async resolveNote(
+    dto: { note?: string; noteJson?: ProseMirrorDoc | null },
+    todoId?: string,
+  ): Promise<{ note?: string; noteJson?: ProseMirrorDoc | null }> {
+    if (dto.noteJson !== undefined) {
+      if (dto.noteJson !== null && dto.noteJson.type !== 'doc') {
+        throw new BadRequestException(
+          'noteJson harus berupa dokumen (type "doc")',
+        );
+      }
+      const lookup = new Map<string, AttachmentRef>();
+      const ids = attachmentIds(dto.noteJson);
+      if (todoId && ids.length > 0) {
+        const rows = await this.db.db
+          .select()
+          .from(attachments)
+          .where(
+            and(inArray(attachments.id, ids), eq(attachments.todoId, todoId)),
+          );
+        for (const row of rows) lookup.set(row.id, row);
+      }
+      return {
+        noteJson: dto.noteJson,
+        note: docToMarkdown(dto.noteJson, lookup),
+      };
+    }
+    if (dto.note !== undefined) {
+      return { note: dto.note, noteJson: markdownToDoc(dto.note) };
+    }
+    return {};
   }
 
   private assertDate(value: string | null | undefined, field: string) {

@@ -1,4 +1,6 @@
 import { InputType, Field, ID, Int } from '@nestjs/graphql';
+import { GraphQLJSON } from '@/common/scalars/json.scalar';
+import type { ProseMirrorDoc } from '@/db/schema';
 
 @InputType()
 export class UpdateTodoInput {
@@ -10,6 +12,9 @@ export class UpdateTodoInput {
 
   @Field({ nullable: true })
   note?: string;
+
+  @Field(() => GraphQLJSON, { nullable: true })
+  noteJson?: ProseMirrorDoc | null;
 
   @Field({ nullable: true })
   completed?: boolean;

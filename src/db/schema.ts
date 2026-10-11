@@ -11,14 +11,6 @@ import {
   jsonb,
 } from 'drizzle-orm/pg-core';
 
-// ---------------------------------------------------------------------------
-// Enum
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Document content (ProseMirror / Tiptap JSON)
-// ---------------------------------------------------------------------------
-
 export type ProseMirrorDoc = {
   type: string;
   content?: ProseMirrorDoc[];
@@ -32,10 +24,6 @@ export const attachmentTypeEnum = pgEnum('AttachmentType', [
   'FILE',
   'LINK',
 ]);
-
-// ---------------------------------------------------------------------------
-// Tables
-// ---------------------------------------------------------------------------
 
 export const users = pgTable('User', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -136,6 +124,8 @@ export const todos = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     title: text('title').notNull(),
     note: text('note').notNull().default(''),
+    // note: sumber kebenaran editor; `note` adalah Markdown turunannya untuk agent/MCP/pencarian
+    noteJson: jsonb('noteJson').$type<ProseMirrorDoc | null>(),
     completed: boolean('completed').notNull().default(false),
     important: boolean('important').notNull().default(false),
     priority: integer('priority'),
@@ -291,10 +281,6 @@ export const attachments = pgTable('Attachment', {
   projectId: uuid('projectId'),
   userId: uuid('userId'),
 });
-
-// ---------------------------------------------------------------------------
-// Inferred types (useful in services)
-// ---------------------------------------------------------------------------
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
