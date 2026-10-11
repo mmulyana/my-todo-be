@@ -1,6 +1,9 @@
+import type { ProseMirrorDoc } from '@/db/schema';
+
 export class CreateTodoDto {
   title: string;
   note?: string;
+  noteJson?: ProseMirrorDoc | null;
   important?: boolean;
   priority?: number;
   today?: string | null;

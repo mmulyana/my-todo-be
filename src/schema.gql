@@ -85,6 +85,7 @@ type Todo {
   id: ID!
   title: String!
   note: String!
+  noteJson: JSON
   completed: Boolean!
   important: Boolean!
   priority: Int
@@ -292,6 +293,7 @@ input LoginInput {
 input CreateTodoInput {
   title: String!
   note: String
+  noteJson: JSON
   important: Boolean
   priority: Int
   today: String
@@ -308,6 +310,7 @@ input UpdateTodoInput {
   id: ID!
   title: String
   note: String
+  noteJson: JSON
   completed: Boolean
   important: Boolean
   priority: Int

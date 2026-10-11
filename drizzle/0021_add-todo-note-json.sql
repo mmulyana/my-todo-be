@@ -1,0 +1,1 @@
+ALTER TABLE "Todo" ADD COLUMN "noteJson" jsonb;

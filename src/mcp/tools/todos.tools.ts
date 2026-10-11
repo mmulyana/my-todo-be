@@ -198,7 +198,12 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
         "Create a new todo, or a subtodo when parentId is given. Pass listName/projectName/milestoneName (not ids) to file it under an existing list, project or milestone - resolved by exact, case-insensitive name match against the user's own data. milestoneName is looked up within projectName when both are given.",
       inputSchema: {
         title: z.string().min(1),
-        note: z.string().optional(),
+        note: z
+          .string()
+          .optional()
+          .describe(
+            'Markdown (GFM: headings, lists, tables, links). Keep lines like [title](url "attachment:<id>") as they are, they reference attachments.',
+          ),
         important: z.boolean().optional(),
         today: DATE_SHAPE.optional().describe("Mark as today's todo"),
         dueDate: DATE_SHAPE.optional(),
@@ -290,7 +295,12 @@ export function registerTodoTools(server: McpServer, ctx: McpContext) {
       inputSchema: {
         id: z.string(),
         title: z.string().min(1).optional(),
-        note: z.string().optional(),
+        note: z
+          .string()
+          .optional()
+          .describe(
+            'Markdown (GFM: headings, lists, tables, links). Keep lines like [title](url "attachment:<id>") as they are, they reference attachments.',
+          ),
         important: z.boolean().optional(),
         today: DATE_SHAPE.nullable().optional(),
         dueDate: DATE_SHAPE.nullable().optional(),

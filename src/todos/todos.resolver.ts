@@ -22,8 +22,11 @@ import { Project } from '@/projects/models/project.model';
 import { Attachment } from '@/attachments/models/attachment.model';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { CurrentUser } from '@/auth/current-user.decorator';
+import { GraphQLJSON } from '@/common/scalars/json.scalar';
+import { markdownToDoc } from '@/common/note-markdown';
+import type { ProseMirrorDoc } from '@/db/schema';
 
-// Batas kedalaman nested `subtodos` yang boleh diminta dalam satu query
+// note: batas kedalaman nested `subtodos` per query, level lebih dalam diambil lewat todo(id)
 const MAX_NESTED_SUBTODOS_DEPTH = 1;
 
 interface ResolvedTodo extends Todo {
@@ -34,6 +37,13 @@ interface ResolvedTodo extends Todo {
 @UseGuards(JwtAuthGuard)
 export class TodosResolver {
   constructor(private readonly todosService: TodosService) {}
+
+  // note: todo lama belum punya noteJson, jadi diturunkan dari note saat dibaca dan tersimpan di save berikutnya
+  @ResolveField(() => GraphQLJSON, { nullable: true })
+  noteJson(@Parent() todo: Todo): ProseMirrorDoc | null {
+    if (todo.noteJson) return todo.noteJson;
+    return todo.note ? markdownToDoc(todo.note) : null;
+  }
 
   @ResolveField(() => [Attachment])
   attachments(@Parent() todo: Todo) {
