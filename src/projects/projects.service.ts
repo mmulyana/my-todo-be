@@ -7,7 +7,7 @@ import {
   attachments,
   kanbanColumns,
 } from '@/db/schema';
-import { eq, isNull, and, asc, count, inArray } from 'drizzle-orm';
+import { eq, isNull, and, asc, count, inArray, sql } from 'drizzle-orm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { normalizeRepoList } from '@/common/repo-url';
@@ -26,6 +26,7 @@ export class ProjectsService {
         description: dto.description,
         repos: normalizeRepoList(dto.repos ?? []),
         parentId: dto.parentId ?? null,
+        position: dto.position ?? (await this.nextPosition(userId)),
         userId,
       })
       .returning();
@@ -46,7 +47,7 @@ export class ProjectsService {
           ? eq(projects.userId, userId)
           : and(eq(projects.userId, userId), isNull(projects.archivedAt)),
       )
-      .orderBy(asc(projects.createdAt));
+      .orderBy(asc(projects.position), asc(projects.createdAt));
   }
 
   async findOne(id: string, userId: string) {
@@ -76,7 +77,7 @@ export class ProjectsService {
           includeArchived ? undefined : isNull(projects.archivedAt),
         ),
       )
-      .orderBy(asc(projects.createdAt));
+      .orderBy(asc(projects.position), asc(projects.createdAt));
   }
 
   findLists(projectId: string) {
@@ -134,6 +135,7 @@ export class ProjectsService {
         repos:
           dto.repos === undefined ? undefined : normalizeRepoList(dto.repos),
         parentId: dto.parentId,
+        position: dto.position,
         updatedAt: new Date(),
       })
       .where(and(eq(projects.id, id), eq(projects.userId, userId)))
@@ -156,6 +158,16 @@ export class ProjectsService {
       .where(and(eq(projects.id, id), eq(projects.userId, userId)))
       .returning();
     return deleted ?? null;
+  }
+
+  private async nextPosition(userId: string) {
+    const [result] = await this.db.db
+      .select({
+        position: sql<number>`coalesce(max(${projects.position}), -1) + 1`,
+      })
+      .from(projects)
+      .where(eq(projects.userId, userId));
+    return Number(result.position);
   }
 
   private async setArchivedAt(

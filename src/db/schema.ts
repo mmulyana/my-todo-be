@@ -9,6 +9,7 @@ import {
   uuid,
   index,
   jsonb,
+  doublePrecision,
 } from 'drizzle-orm/pg-core';
 
 export type ProseMirrorDoc = {
@@ -57,6 +58,7 @@ export const projects = pgTable('Project', {
     .notNull()
     .default(sql`'{}'::text[]`),
   parentId: uuid('parentId'),
+  position: doublePrecision('position').notNull().default(0),
   userId: uuid('userId'),
 });
 

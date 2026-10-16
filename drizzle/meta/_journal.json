@@ -155,6 +155,13 @@
       "when": 1791698602583,
       "tag": "0021_add-todo-note-json",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792156867002,
+      "tag": "0022_add-project-position",
+      "breakpoints": true
     }
   ]
 }

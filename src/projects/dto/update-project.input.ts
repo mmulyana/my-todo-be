@@ -1,4 +1,4 @@
-import { InputType, Field, ID } from '@nestjs/graphql';
+import { InputType, Field, ID, Float } from '@nestjs/graphql';
 
 @InputType()
 export class UpdateProjectInput {
@@ -22,4 +22,7 @@ export class UpdateProjectInput {
 
   @Field(() => [String], { nullable: true })
   repos?: string[];
+
+  @Field(() => Float, { nullable: true })
+  position?: number;
 }
