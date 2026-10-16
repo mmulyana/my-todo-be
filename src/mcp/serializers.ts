@@ -66,6 +66,7 @@ export function serializeProject(
     name: project.name,
     description: project.description,
     repos: project.repos,
+    position: project.position,
     parentId: project.parentId,
     archivedAt: project.archivedAt,
     countTodo,

@@ -1,4 +1,4 @@
-import { InputType, Field } from '@nestjs/graphql';
+import { InputType, Field, Float } from '@nestjs/graphql';
 
 @InputType()
 export class CreateProjectInput {
@@ -19,4 +19,7 @@ export class CreateProjectInput {
 
   @Field(() => [String], { nullable: true })
   repos?: string[];
+
+  @Field(() => Float, { nullable: true })
+  position?: number;
 }

@@ -56,6 +56,7 @@ type Project {
   updatedAt: DateTime!
   archivedAt: DateTime
   repos: [String!]!
+  position: Float!
   parentId: String
   parent: Project
   children: [Project!]!
@@ -354,6 +355,7 @@ input CreateProjectInput {
   description: String
   parentId: String
   repos: [String!]
+  position: Float
 }
 
 input UpdateProjectInput {
@@ -364,6 +366,7 @@ input UpdateProjectInput {
   description: String
   parentId: String
   repos: [String!]
+  position: Float
 }
 
 input CreateDocumentInput {

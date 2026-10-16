@@ -5,4 +5,5 @@ export class UpdateProjectDto {
   description?: string | null;
   parentId?: string | null;
   repos?: string[];
+  position?: number;
 }

@@ -5,4 +5,5 @@ export class CreateProjectDto {
   description?: string;
   parentId?: string | null;
   repos?: string[];
+  position?: number;
 }

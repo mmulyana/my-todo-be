@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int, Float } from '@nestjs/graphql';
 import { Todo } from '@/todos/models/todo.model';
 import { List } from '@/lists/models/list.model';
 import { Attachment } from '@/attachments/models/attachment.model';
@@ -31,6 +31,9 @@ export class Project {
 
   @Field(() => [String])
   repos: string[];
+
+  @Field(() => Float)
+  position: number;
 
   @Field(() => String, { nullable: true })
   parentId?: string | null;
