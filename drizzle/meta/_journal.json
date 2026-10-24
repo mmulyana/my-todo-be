@@ -162,6 +162,13 @@
       "when": 1792156867002,
       "tag": "0022_add-project-position",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792802079475,
+      "tag": "0023_add-user-profile",
+      "breakpoints": true
     }
   ]
 }

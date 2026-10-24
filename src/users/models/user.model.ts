@@ -11,6 +11,12 @@ export class User {
   @Field()
   username: string;
 
+  @Field(() => String, { nullable: true })
+  displayName?: string | null;
+
+  @Field(() => String, { nullable: true })
+  avatarUrl?: string | null;
+
   @Field()
   createdAt: Date;
 
