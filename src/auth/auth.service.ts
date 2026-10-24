@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -44,6 +45,23 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user.id);
     return { ...tokens, user };
+  }
+
+  async changePassword(userId: string, current: string, next: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user || !(await bcrypt.compare(current, user.password))) {
+      throw new UnauthorizedException('Password saat ini salah');
+    }
+    if (next.length < 8) {
+      throw new BadRequestException('Password baru minimal 8 karakter');
+    }
+    if (next === current) {
+      throw new BadRequestException(
+        'Password baru tidak boleh sama dengan password lama',
+      );
+    }
+    await this.usersService.setPassword(userId, await bcrypt.hash(next, 10));
+    return true;
   }
 
   async refreshToken(token: string) {

@@ -113,6 +113,9 @@ type Todo {
   attachments: [Attachment!]!
 }
 
+"""Arbitrary JSON value"""
+scalar JSON
+
 type Document {
   id: ID!
   title: String!
@@ -122,9 +125,6 @@ type Document {
   projectId: String
   project: Project
 }
-
-"""Arbitrary JSON value"""
-scalar JSON
 
 type LinkPreview {
   url: String!
@@ -176,6 +176,8 @@ type User {
   id: ID!
   email: String!
   username: String!
+  displayName: String
+  avatarUrl: String
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -246,6 +248,8 @@ type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   refreshToken(token: String!): AuthPayload!
+  changePassword(input: ChangePasswordInput!): Boolean!
+  updateProfile(input: UpdateProfileInput!): User!
   createTodo(input: CreateTodoInput!): Todo!
   updateTodo(input: UpdateTodoInput!): Todo!
   moveTodo(input: MoveTodoInput!): Todo
@@ -289,6 +293,16 @@ input RegisterInput {
 input LoginInput {
   email: String!
   password: String!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
+input UpdateProfileInput {
+  displayName: String
+  username: String
 }
 
 input CreateTodoInput {
